@@ -13,6 +13,7 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private GameObject _treesTilePrefab;
     
     // Noise Settings
+    [SerializeField] private int _noiseSeed = 1276473;
     [SerializeField] private float _noiseFrequency = 100f;
     [SerializeField] private float _waterThreshold = 0.4f;
     [SerializeField] private float _treesThreshold = 0.7f;
@@ -44,8 +45,11 @@ public class MapGenerator : MonoBehaviour
                 Vector2 hexCoords = GetHexCoords(x, z);
                 Vector3 position = new Vector3(hexCoords.x, 0, hexCoords.y);
                 
+                // If the noiseSeed is -1, make random seed
+                if (_noiseSeed == -1) _noiseSeed = Random.Range(0, 10000000);
+     
                 // Get noise values (0-1)
-                float noiseValue = Mathf.PerlinNoise(hexCoords.x / _noiseFrequency, hexCoords.y / _noiseFrequency);
+                float noiseValue = Mathf.PerlinNoise((hexCoords.x + _noiseSeed) / _noiseFrequency, (hexCoords.y + _noiseSeed) / _noiseFrequency);
 
                 // Initiate default tile as grass
                 GameObject prefab = _grassTilePrefab;
@@ -60,6 +64,13 @@ public class MapGenerator : MonoBehaviour
                 GameObject tile = Instantiate(prefab, position, Quaternion.identity);
             }
         }
+    }
+
+
+    public void ReplaceTile(GameObject oldTile, GameObject newTile)
+    {
+        Instantiate(newTile, oldTile.transform.position, Quaternion.identity);
+        Destroy(oldTile);
     }
     
 }
