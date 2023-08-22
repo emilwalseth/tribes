@@ -6,8 +6,7 @@ using UnityEngine.Serialization;
 public class MapGenerator : MonoBehaviour
 {
     
-    [SerializeField] private int _mapWidth = 10;
-    [SerializeField] private int _mapHeight = 10;
+    [SerializeField] private int _mapSize = 10;
     [SerializeField] private int _tileSize = 1;
     [SerializeField] private GameObject _grassTilePrefab;
     [SerializeField] private GameObject _treesTilePrefab;
@@ -22,6 +21,8 @@ public class MapGenerator : MonoBehaviour
     void Start()
     {
         MakeMapGrid();
+        transform.position = new Vector3(-(_mapSize - (_mapSize / 6)) * _tileSize * 0.5f, 0, -_mapSize * _tileSize * 0.5f);
+        
     }
 
 
@@ -32,16 +33,21 @@ public class MapGenerator : MonoBehaviour
 
         return new Vector2(xPos, zPos);
     }
+    
+    public int GetMapSize()
+    {
+        return _mapSize;
+    }
 
 
     void MakeMapGrid()
     {
 
-        for (int x = 0; x < _mapWidth; x++)
+        for (int x = 0; x < _mapSize; x++)
         {
-            for (int z = 0; z < _mapHeight; z++)
+            for (int z = 0; z < _mapSize; z++)
             {
-
+                
                 Vector2 hexCoords = GetHexCoords(x, z);
                 Vector3 position = new Vector3(hexCoords.x, 0, hexCoords.y);
                 
@@ -61,7 +67,8 @@ public class MapGenerator : MonoBehaviour
                 if (noiseValue > _treesThreshold) prefab = _treesTilePrefab;
                 
                 // Only instantiate the tile if it is not water
-                GameObject tile = Instantiate(prefab, position, Quaternion.identity);
+                GameObject tile = Instantiate(prefab, position + transform.position, Quaternion.identity);
+                tile.transform.SetParent(transform);
             }
         }
     }

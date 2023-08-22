@@ -10,14 +10,14 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] private MapGenerator _map;
     [SerializeField] private GameObject _campsitePrefab;
+    [SerializeField] private Camera _camera;
     [SerializeField][Range(0f,1f)] private float _zoomStrength = 1;
     [SerializeField] private float _zoomSpeed = 5;
     [SerializeField] private float _cameraDeceleration = 10;
     [SerializeField] private Vector2 _zoomMaxMin = new(1,20);
     
-    private Camera _camera;
 
-    
+
 
     // Interaction variables
     private GameObject _selectedObject;
@@ -31,16 +31,10 @@ public class PlayerController : MonoBehaviour
     private bool _canMove;
     private Vector3 _cameraVelocity;
 
-
-
-    private void Awake()
-    {
-        _camera = GetComponent<Camera>();
-    }
-
     private void Start()
     {
         _zoomTarget = _camera.orthographicSize;
+        Application.targetFrameRate = 60;
     }
 
     // Update is called once per frame
@@ -58,6 +52,7 @@ public class PlayerController : MonoBehaviour
 
     private void CheckClick()
     {
+        
         if (IsMouseOverUI()) return;
 
         // Check when the user start clicking
@@ -69,6 +64,7 @@ public class PlayerController : MonoBehaviour
         
         // Check if user clicked
         if (!Input.GetMouseButtonUp(0)) return;
+
 
         // If we have clicked for long, it is not a click, but a hold.
         if (_timeSinceClick > 0.25f) return;
@@ -85,10 +81,10 @@ public class PlayerController : MonoBehaviour
             
         // Cast the ray and check hit
         if (!Physics.Raycast(ray, out RaycastHit hit)) return;
-            
+
         // Get object from hit
         GameObject hitObject = hit.transform.gameObject;
-            
+
         // Select the new object
         SetSelectedObject(hitObject);
             
@@ -136,9 +132,14 @@ public class PlayerController : MonoBehaviour
         // Dont apply the velocity if we are holding the button
         if (Input.touchCount > 0 || Input.GetMouseButton(0)) return;
         
-        _camera.transform.position += _cameraVelocity;
+        MoveCamera(_cameraVelocity);
     }
 
+    private void SetCameraVelocity(Vector3 newVelocity)
+    {
+        _cameraVelocity = Vector3.ClampMagnitude(newVelocity, 2);
+        print(_cameraVelocity.magnitude);
+    }
 
     private void SetSelectedObject(GameObject newSelected)
     {
@@ -201,13 +202,23 @@ public class PlayerController : MonoBehaviour
 
         if (delta != Vector3.zero && _canMove)
         {
-            _cameraVelocity = -delta;
-            _camera.transform.position -= delta;
+            SetCameraVelocity(-delta);
+            MoveCamera(-delta);
         }
         
-
     }
 
+    private void MoveCamera(Vector3 delta)
+    {
+        int mapSize = _map.GetMapSize();
+        Vector3 currentPos = transform.position;
+        
+        // Clamp delta to the camera's orthographic size
+        float xPos = Mathf.Clamp(currentPos.x + delta.x, -mapSize, mapSize);
+        float zPos = Mathf.Clamp(currentPos.z + delta.z, -mapSize, mapSize);
+        
+        transform.position = new Vector3(xPos, currentPos.y, zPos);
+    }
 
     private void CheckZoom()
     {

@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 9c21bdd01d0f1884086e8f7e3157e28a
+guid: 6b9f088d61e883c41b8c88c85cd083a3
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -9,16 +9,6 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: Color
     second: {fileID: 2100000, guid: d5ab6a32115f24f48b5d19254df21701, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Leaves
-    second: {fileID: 2100000, guid: 8a4ddcc3df2fcf8438cab1c5aafa0221, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: Trunk
-    second: {fileID: 2100000, guid: 7a8545a4a1f073a4f88b97d33d98096e, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
