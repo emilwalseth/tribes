@@ -12,6 +12,8 @@ public class MobileUtilsScript : MonoBehaviour {
  
  
     void Start(){
+        
+        if (!_showDebug) return;
         StartCoroutine(FPS());
     }
  
@@ -35,7 +37,7 @@ public class MobileUtilsScript : MonoBehaviour {
     {
         if (!_showDebug) return;
 
-        GUI.skin.label.fontSize = 100;
-        GUI.Label(new Rect(Screen.width - 600,100,600,100), fps);
+        GUI.skin.label.fontSize = 70;
+        GUI.Label(new Rect(Screen.width - 300,50,600,100), fps);
     }
 }

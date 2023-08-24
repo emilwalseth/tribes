@@ -4924,6 +4924,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Campsite
       objectReference: {fileID: 0}
+    - target: {fileID: 1204926481390117159, guid: 68086a304a0aa2a48a98bab4baeea195, type: 3}
+      propertyPath: m_StaticEditorFlags
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 5715747538727013516, guid: 68086a304a0aa2a48a98bab4baeea195, type: 3}
       propertyPath: m_RootOrder
       value: 0

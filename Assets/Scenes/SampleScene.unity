@@ -207,7 +207,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 1942103527}
         m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
         m_MethodName: MakeCampsite
         m_Mode: 1
@@ -271,15 +271,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b9f088d61e883c41b8c88c85cd083a3, type: 3}
       propertyPath: m_LocalScale.x
-      value: 200
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b9f088d61e883c41b8c88c85cd083a3, type: 3}
       propertyPath: m_LocalScale.y
-      value: 200
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b9f088d61e883c41b8c88c85cd083a3, type: 3}
       propertyPath: m_LocalScale.z
-      value: 200
+      value: 1000
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 6b9f088d61e883c41b8c88c85cd083a3, type: 3}
       propertyPath: m_LocalPosition.x
@@ -631,7 +631,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: 0.38268343, y: -0, z: -0, w: 0.92387956}
-  m_LocalPosition: {x: 0, y: 33.7, z: -26.71}
+  m_LocalPosition: {x: 0, y: 33.7, z: -33.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -802,7 +802,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 709555d864f8516438f0df9b91c20897, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _mapSize: 10
+  _mapSize: 20
   _tileSize: 2
   _grassTilePrefab: {fileID: 1204926481390117159, guid: 68086a304a0aa2a48a98bab4baeea195, type: 3}
   _treesTilePrefab: {fileID: 3917042970570756655, guid: 0eab2b266a8d60140a04f829bf93370d, type: 3}
@@ -818,7 +818,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1473999157}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.7907696, y: 0, z: -4.568199}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -925,10 +925,9 @@ MonoBehaviour:
   _map: {fileID: 1473999158}
   _campsitePrefab: {fileID: 3917042970570756655, guid: 8e5572dc5f7178a429ea4a48d6457504, type: 3}
   _camera: {fileID: 963194227}
-  _zoomStrength: 0.597
-  _zoomSpeed: 5
-  _cameraDeceleration: 5
-  _zoomMaxMin: {x: 3, y: 30}
+  _cameraDeceleration: 3
+  _zoomStrength: 0.421
+  _zoomMaxMin: {x: 3, y: 20}
 --- !u!4 &1942103528
 Transform:
   m_ObjectHideFlags: 0

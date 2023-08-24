@@ -21,8 +21,7 @@ public class MapGenerator : MonoBehaviour
     void Start()
     {
         MakeMapGrid();
-        transform.position = new Vector3(-(_mapSize - (_mapSize / 6)) * _tileSize * 0.5f, 0, -_mapSize * _tileSize * 0.5f);
-        
+
     }
 
 
@@ -34,9 +33,22 @@ public class MapGenerator : MonoBehaviour
         return new Vector2(xPos, zPos);
     }
     
-    public int GetMapSize()
+    public Vector3 GetMapMax()
     {
-        return _mapSize;
+        Vector2 hexCoordsMax = GetHexCoords(_mapSize, _mapSize);
+        return new Vector3(hexCoordsMax.x, 0, hexCoordsMax.y) + transform.position;
+    }
+    
+    public Vector3 GetMapMin()
+    {
+        return transform.position;
+    }
+
+    public Vector3 GetMapCenter()
+    {
+        Vector3 mapMax = GetMapMax();
+        Vector3 mapMin = GetMapMin();
+        return (mapMax - mapMin) / 2;
     }
 
 
@@ -49,7 +61,7 @@ public class MapGenerator : MonoBehaviour
             {
                 
                 Vector2 hexCoords = GetHexCoords(x, z);
-                Vector3 position = new Vector3(hexCoords.x, 0, hexCoords.y);
+                Vector3 position = new (hexCoords.x, 0, hexCoords.y);
                 
                 // If the noiseSeed is -1, make random seed
                 if (_noiseSeed == -1) _noiseSeed = Random.Range(0, 10000000);
