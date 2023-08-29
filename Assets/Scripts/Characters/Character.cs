@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Interfaces;
 using UnityEngine;
 using UnityEngine.Events;
+using World;
 
 namespace Characters
 {
@@ -12,15 +14,12 @@ namespace Characters
         [SerializeField] private float _movementSpeed = 1f;
     
         private Animator _animator;
-        private Vector3 _lastFramePos;
+        private PathRenderer _currentPathRenderer;
 
         public GameObject CurrentTile { get; set; }
 
         private List<GameObject> _navigationPath = new List<GameObject>();
-
         
-        // Actions
-        public UnityAction onUpdatePath;
 
         // Animation values
         private static readonly int IsMoving = Animator.StringToHash("IsMoving");
@@ -34,20 +33,47 @@ namespace Characters
         public void SetNewNavigationPath(List<GameObject> newNavigationPath)
         {
             if (newNavigationPath == null) return;
-
             _navigationPath = newNavigationPath;
+            MakePathRenderer();
         }
-        
-        
-        // Start is called before the first frame update
-        void Start()
+
+        private void MakePathRenderer()
         {
-            _lastFramePos = transform.position;
+            DestroyRenderPath();
+            _currentPathRenderer = GameManager.Instance.MakePathRenderer(GetRenderPathPoints());
+        }
+
+        private List<Vector3> GetRenderPathPoints()
+        {
+            List<Vector3> pathPoints = _navigationPath.Select(t => t.transform.position).ToList();
+            pathPoints.Reverse();
+            pathPoints.Add(transform.position);
+
+            return pathPoints;
+        }
+
+        private void UpdatePathRenderer()
+        {
+            if (_currentPathRenderer)
+            {
+                _currentPathRenderer.MakePath(GetRenderPathPoints());
+            }
+            else
+            {
+                MakePathRenderer();
+            }
         }
 
         private void Update()
         {
             MoveAlongPath();
+        }
+        
+        private void DestroyRenderPath()
+        {
+            if (!_currentPathRenderer) return;
+            Destroy(_currentPathRenderer.gameObject);
+            _currentPathRenderer = null;
         }
 
         private void MoveAlongPath()
@@ -55,6 +81,7 @@ namespace Characters
             if (_navigationPath.Count == 0)
             {
                 _animator.SetBool(IsMoving, false);
+                DestroyRenderPath();
                 return;
             };
             _animator.SetBool(IsMoving, true);
@@ -67,13 +94,13 @@ namespace Characters
             // Move towards current target
             transform.position = Vector3.MoveTowards(currentPos, currentTarget, _movementSpeed * Time.deltaTime);
             RotateTowardsPosition(currentTarget);
+            UpdatePathRenderer();
             
             // We are close enough to the point to go to next point.
             if (distance < 0.1f)
             {
                 CurrentTile = _navigationPath[0];
                 _navigationPath.RemoveAt(0);
-                onUpdatePath?.Invoke();
             }
         }
         public void OnClicked()

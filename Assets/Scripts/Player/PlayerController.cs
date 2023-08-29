@@ -13,7 +13,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private MapGenerator _map;
     [SerializeField] private GameObject _campsitePrefab;
     [SerializeField] private Camera _camera;
-    [SerializeField] private PathRenderer _pathPrefab;
 
     // World General
     private GameManager _gameManager;
@@ -520,11 +519,7 @@ public class PlayerController : MonoBehaviour
         {
             List<GameObject> path = NavigationManager.FindPath(_map, _selectedCharacter.CurrentTile.gameObject, targetTile);
             _selectedCharacter.SetNewNavigationPath(path);
-                
-            // Make Path
-            PathRenderer pathRenderer = Instantiate(_pathPrefab, _selectedCharacter.transform.position, Quaternion.identity);
-            pathRenderer.SetCharacter(_selectedCharacter);
-                
+
         }
     }
     
