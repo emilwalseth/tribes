@@ -1,9 +1,10 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using Characters;
+using Interfaces;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.Serialization;
+using World;
 
 public class PlayerController : MonoBehaviour
 {
@@ -12,11 +13,14 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private MapGenerator _map;
     [SerializeField] private GameObject _campsitePrefab;
     [SerializeField] private Camera _camera;
+    [SerializeField] private PathRenderer _pathPrefab;
 
-    
+    // World General
+    private GameManager _gameManager;
 
     // Interaction variables
     private GameObject _selectedObject;
+    private Character _selectedCharacter;
     private Vector3 _startClickPosition;
     private float _timeSinceClick;
 
@@ -41,13 +45,17 @@ public class PlayerController : MonoBehaviour
     private float _targetZoom;
     private Vector3 _zoomTargetCenter;
     
-
-
     private void Start()
     {
-        _targetZoom = _camera.orthographicSize;
-        transform.position = _map.GetMapCenter();
+        
+        _gameManager = GameManager.Instance;
 
+        // Set spawn position to the spawned hero
+        transform.position = _map.GetMapCenter();
+        _gameManager.onHeroSpawned += hero => transform.position = hero.transform.position;;
+
+        _targetZoom = _camera.orthographicSize;
+        
         InitMapBounds();
         
         Application.targetFrameRate = 60;
@@ -406,15 +414,11 @@ public class PlayerController : MonoBehaviour
 
         // Get object from hit
         GameObject hitObject = hit.transform.gameObject;
-
+        
         // Select the new object
-        SetSelectedObject(hitObject);
+        ClickObject(hitObject);
             
-        // Get interactable
-        IInteractable interactable = hitObject.GetComponent<IInteractable>();
 
-        // Interact with interactable interface
-        interactable?.OnClicked();
 
     }
 
@@ -440,9 +444,7 @@ public class PlayerController : MonoBehaviour
     }
     
     private void ZoomBounce()
-    
     {
-
         if (_isZooming) return;
         
         const float maxBounce = 4f;
@@ -468,28 +470,62 @@ public class PlayerController : MonoBehaviour
 
         // Clamps the velocity so it never goes too fast
         _cameraVelocity = Vector3.ClampMagnitude(velocity, 50 * Time.deltaTime);
-        
-        
     }
-
+    
+    
     
     private bool IsMouseOverUI()
     {
         return Input.touchCount > 0 ? EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId) : EventSystem.current.IsPointerOverGameObject();
     }
 
-    private void SetSelectedObject(GameObject newSelected)
+    private void ClickObject(GameObject newSelected)
     {
-        if (!newSelected) return;
-        if (newSelected == _selectedObject) return;
-
+        
+        // If we already have a selected object, deselect it
         if (_selectedObject)
         {
             _selectedObject.GetComponent<IInteractable>()?.OnDeselected();
         }
         
-        _selectedObject = newSelected;
+        // If the new object is null, dont do anything
+        if (!newSelected) return;
+
+        Character character = newSelected.GetComponent<Character>();
+        if (character)
+        {
+            _selectedCharacter = character;
+            _selectedCharacter.GetComponent<IInteractable>()?.OnClicked();
+            return;
+        }
         
+        // Click and assign the new selected
+        _selectedObject = newSelected;
+        _selectedObject.GetComponent<IInteractable>()?.OnClicked();
+
+
+        TileScript tile = newSelected.GetComponent<TileScript>();
+        // Check if we should make a path
+        if (tile && _selectedCharacter)
+        {
+            StartNavigation(tile.gameObject);
+            
+        }
+    }
+
+
+    private void StartNavigation(GameObject targetTile)
+    {
+        if (_selectedCharacter.CurrentTile && _selectedCharacter.CurrentTile.gameObject != targetTile)
+        {
+            List<GameObject> path = NavigationManager.FindPath(_map, _selectedCharacter.CurrentTile.gameObject, targetTile);
+            _selectedCharacter.SetNewNavigationPath(path);
+                
+            // Make Path
+            PathRenderer pathRenderer = Instantiate(_pathPrefab, _selectedCharacter.transform.position, Quaternion.identity);
+            pathRenderer.SetCharacter(_selectedCharacter);
+                
+        }
     }
     
     

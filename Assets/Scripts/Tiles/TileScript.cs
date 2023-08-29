@@ -1,12 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Interfaces;
+using Tiles;
 using UnityEngine;
+using World;
 
 public class TileScript : MonoBehaviour, IInteractable
 {
 
     [SerializeField] private GameObject _selectionMesh;
+    [SerializeField] private TileData _tileData;
+    public TileData TileData => _tileData;
     
     private Animator _animator;
     
@@ -15,7 +20,7 @@ public class TileScript : MonoBehaviour, IInteractable
     {
         _animator = GetComponent<Animator>();
     }
-
+    
     public void OnClicked()
     {
         PlayClickedAnimation();

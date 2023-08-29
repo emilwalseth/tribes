@@ -12,6 +12,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: TreesTile
       objectReference: {fileID: 0}
+    - target: {fileID: 3677227330552051745, guid: 68086a304a0aa2a48a98bab4baeea195, type: 3}
+      propertyPath: _tileData
+      value: 
+      objectReference: {fileID: 11400000, guid: 909b7a062018d314090d99d7ce7af4a9, type: 2}
+    - target: {fileID: 3677227330552051745, guid: 68086a304a0aa2a48a98bab4baeea195, type: 3}
+      propertyPath: _tileType
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5715747538727013516, guid: 68086a304a0aa2a48a98bab4baeea195, type: 3}
       propertyPath: m_RootOrder
       value: 0

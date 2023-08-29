@@ -1,9 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-public interface IInteractable
+namespace Interfaces
 {
-    void OnClicked();
-    void OnDeselected();
+    public interface IInteractable
+    {
+        void OnClicked();
+        void OnDeselected();
+    }
 }

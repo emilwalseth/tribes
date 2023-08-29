@@ -11,9 +11,10 @@ GameObject:
   - component: {fileID: 5715747538727013516}
   - component: {fileID: 5135237073282315188}
   - component: {fileID: 3677227330552051745}
+  - component: {fileID: 8742265194220012659}
   - component: {fileID: 1892610264329328229}
   m_Layer: 0
-  m_Name: Hexagon
+  m_Name: GrassTile
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -71,6 +72,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _selectionMesh: {fileID: 7289796765965544037}
+  _tileData: {fileID: 11400000, guid: 2eb029f7d1cf9834596bca99525648d6, type: 2}
+--- !u!114 &8742265194220012659
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1204926481390117159}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b9673ccb9c56bcc4197e7beb860afd39, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _nodeWeight: 0
+  _isWalkable: 1
 --- !u!95 &1892610264329328229
 Animator:
   serializedVersion: 5
