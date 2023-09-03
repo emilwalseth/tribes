@@ -10,9 +10,11 @@ namespace Tiles
         [SerializeField] private int _nodeWeight = 0;
         [SerializeField] private bool _isWalkable = true;
 
+        
         public NavigationNode Parent { get; set; }
         public bool IsWalkable => _isWalkable;
-    
+        public int NodeWeight => _nodeWeight;
+        
         public int GCost { get; set; }
         public int HCost { get; set; }
     

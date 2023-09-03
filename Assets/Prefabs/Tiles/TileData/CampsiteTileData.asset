@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: CampsiteTileData
   m_EditorClassIdentifier: 
   _tileType: 0
-  _isWalkable: 1
+  _selectedRadius: 1
+  _uiType: 0

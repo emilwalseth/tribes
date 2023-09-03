@@ -13,4 +13,6 @@ MonoBehaviour:
   m_Name: GrassTileData
   m_EditorClassIdentifier: 
   _tileType: 0
-  _isWalkable: 1
+  _selectedRadius: 0
+  _menuOptions:
+  - {fileID: 3862614924149558315, guid: 8eb76004af84b2c40a97c7794d36360c, type: 3}

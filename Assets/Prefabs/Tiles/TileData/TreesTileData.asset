@@ -13,4 +13,11 @@ MonoBehaviour:
   m_Name: TreesTileData
   m_EditorClassIdentifier: 
   _tileType: 1
-  _isWalkable: 0
+  _selectedRadius: 0
+  _menuOptions:
+  - {fileID: 3862614924149558315, guid: 8eb76004af84b2c40a97c7794d36360c, type: 3}
+  - {fileID: 3862614924149558315, guid: d1f3f7a0a1aa7d14a9fb5cafb9dd6885, type: 3}
+  _resources:
+  - _resourceType: 0
+    _resourceIcon: {fileID: 21300000, guid: 534e5cefa632d774db747f14c8db8667, type: 3}
+    _amount: 1

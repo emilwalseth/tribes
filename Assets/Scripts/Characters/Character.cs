@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Interfaces;
+using Managers;
+using Tiles;
 using UnityEngine;
 using UnityEngine.Events;
 using World;
@@ -10,119 +12,92 @@ namespace Characters
 {
     public class Character : MonoBehaviour, IInteractable
     {
-
-        [SerializeField] private float _movementSpeed = 1f;
-    
-        private Animator _animator;
-        private PathRenderer _currentPathRenderer;
-
-        public GameObject CurrentTile { get; set; }
-
-        private List<GameObject> _navigationPath = new List<GameObject>();
         
+        
+        [SerializeField] private CharacterData _characterData;
+        [SerializeField] private CharacterTool _tool;
+        
+        
+        private Animator _animator;
 
+        public Unit CurrentUnit { get; set; }
+        public CharacterData CharacterData => _characterData;
+        
+        
         // Animation values
-        private static readonly int IsMoving = Animator.StringToHash("IsMoving");
+        private static readonly int Idle = Animator.StringToHash("Idle");
+        private static readonly int Walking = Animator.StringToHash("Walking");
+        private static readonly int Hit = Animator.StringToHash("Hit");
 
 
         private void Awake()
         {
             _animator = GetComponent<Animator>();
         }
-        
-        public void SetNewNavigationPath(List<GameObject> newNavigationPath)
-        {
-            if (newNavigationPath == null) return;
-            _navigationPath = newNavigationPath;
-            MakePathRenderer();
-        }
 
-        private void MakePathRenderer()
+        public void SetIsMoving(bool newIsMoving)
         {
-            DestroyRenderPath();
-            _currentPathRenderer = GameManager.Instance.MakePathRenderer(GetRenderPathPoints());
-        }
-
-        private List<Vector3> GetRenderPathPoints()
-        {
-            List<Vector3> pathPoints = _navigationPath.Select(t => t.transform.position).ToList();
-            pathPoints.Reverse();
-            pathPoints.Add(transform.position);
-
-            return pathPoints;
-        }
-
-        private void UpdatePathRenderer()
-        {
-            if (_currentPathRenderer)
+            if (newIsMoving)
             {
-                _currentPathRenderer.MakePath(GetRenderPathPoints());
+                _animator.CrossFade(Walking, 0.1f, 0);
             }
             else
             {
-                MakePathRenderer();
+                _animator.CrossFade(Idle, 0.1f, 0);
             }
         }
 
-        private void Update()
-        {
-            MoveAlongPath();
-        }
-        
-        private void DestroyRenderPath()
-        {
-            if (!_currentPathRenderer) return;
-            Destroy(_currentPathRenderer.gameObject);
-            _currentPathRenderer = null;
-        }
-
-        private void MoveAlongPath()
-        {
-            if (_navigationPath.Count == 0)
-            {
-                _animator.SetBool(IsMoving, false);
-                DestroyRenderPath();
-                return;
-            };
-            _animator.SetBool(IsMoving, true);
-
-            Vector3 currentPos = transform.position;
-            Vector3 currentTarget = _navigationPath[0].transform.position;
-
-            float distance = Vector3.Distance(currentPos, currentTarget);
-
-            // Move towards current target
-            transform.position = Vector3.MoveTowards(currentPos, currentTarget, _movementSpeed * Time.deltaTime);
-            RotateTowardsPosition(currentTarget);
-            UpdatePathRenderer();
-            
-            // We are close enough to the point to go to next point.
-            if (distance < 0.1f)
-            {
-                CurrentTile = _navigationPath[0];
-                _navigationPath.RemoveAt(0);
-            }
-        }
         public void OnClicked()
         {
-            print("Clicked");
-            _animator.Play("OnClicked",0,0);
+            SelectionManager.Instance.SelectCharacter(this);
+            AnimationManager.Instance.DoBounceAnim(gameObject, 0.25f);
         }
 
-        public List<GameObject> GetCurrentPath()
+        public TileScript GetCurrenTile()
         {
-            return _navigationPath;
+            return CurrentUnit ? CurrentUnit.GetCurrentTile() : null;
         }
 
-        private void RotateTowardsPosition(Vector3 target)
+        public UnitState GetState()
         {
-            Vector3 direction = (target - transform.position).normalized;
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction, Vector3.up), Time.deltaTime * 10f);
+            return CurrentUnit ? CurrentUnit.State : UnitState.Idle;
+        }
+
+        public void SetState(UnitState state)
+        {
+            if (!CurrentUnit) return;
+            CurrentUnit.State = state;
+        }
+        
+        public void OnSelected()
+        {
+            SetRenderPathVisibility(true);
         }
 
         public void OnDeselected()
         {
-        
+            SetRenderPathVisibility(false);
         }
+
+        private void SetRenderPathVisibility(bool newVisibility)
+        {
+            if (CurrentUnit && CurrentUnit.CurrentPathRenderer)
+            {
+                CurrentUnit.CurrentPathRenderer.gameObject.transform.localScale = newVisibility ? Vector3.one : Vector3.zero;
+            }
+        }
+
+        public void SetTool(ToolType toolType)
+        {
+            _tool.SetTool(toolType);
+        }
+        
+        public void PlayHitAnim(ToolType toolType)
+        {
+            _tool.SetTool(toolType);
+            _animator.Play(Hit, 0,0f);
+        }
+
+
     }
 }

@@ -1,46 +1,80 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
+using Characters;
 using Interfaces;
-using Tiles;
+using Managers;
 using UnityEngine;
-using World;
 
-public class TileScript : MonoBehaviour, IInteractable
+namespace Tiles
 {
-
-    [SerializeField] private GameObject _selectionMesh;
-    [SerializeField] private TileData _tileData;
-    public TileData TileData => _tileData;
+    public class TileScript : NavigationNode, IInteractable
+    {
     
-    private Animator _animator;
-    
-
-    private void Awake()
-    {
-        _animator = GetComponent<Animator>();
-    }
-    
-    public void OnClicked()
-    {
-        PlayClickedAnimation();
-        print("I am clicked! + " + gameObject.name);
-        SetSelected(true);
-    }
-
-    public void OnDeselected()
-    {
-        SetSelected(false);
-    }
-
-    private void SetSelected(bool newSelected)
-    {
-        _selectionMesh.SetActive(newSelected);
-    }
+        [SerializeField] private TileData _tileData;
+        [SerializeField] private GameObject _secondLayer;
+        public TileData TileData => _tileData;
 
 
-    private void PlayClickedAnimation()
-    {
-        _animator.Play("OnClicked", 0, 0);
+        public void OnClicked()
+        {
+            PlayClickedAnimation();
+
+            Character selectedCharacter = SelectionManager.Instance.SelectedCharacter;
+            if (selectedCharacter)
+            {
+                TileScript currentTile = selectedCharacter.GetCurrenTile();
+                if (currentTile != this)
+                {
+                    if (SelectionManager.Instance.IsTileSelected(this))
+                    {
+                        selectedCharacter.CurrentUnit.NavigateToTile(this);
+                        UIManager.instance.CloseMenu();
+                        return;
+                    }
+                }
+            }
+            
+            SelectionManager.Instance.SelectTilesInRadius(_tileData.SelectedRadius, this);
+            OnTileClicked();
+
+        }
+
+        void IInteractable.OnSelected()
+        {
+            OnSelected();
+        }
+
+        public void OnDeselected()
+        {
+            
+        }
+
+        protected virtual void OnTileClicked()
+        {
+            // For override
+        }
+
+        private void OnSelected()
+        {
+            
+        }
+
+        private void PlayInteractAnimation()
+        {
+            AnimationManager.Instance.DoBounceAnim(_secondLayer, 0.25f);
+        }
+
+        public void Harvest()
+        {
+            if (_tileData.Resources.Count == 0) return;
+            
+            PlayInteractAnimation();
+            ScoreManager.Instance.AddResources(_tileData.Resources);
+            InteractionManager.Instance.SpawnIndicator(transform.position, _tileData.Resources[0]);
+        }
+        
+        private void PlayClickedAnimation()
+        {
+            AnimationManager.Instance.DoBounceAnim(gameObject, 0.25f);
+        }
     }
 }

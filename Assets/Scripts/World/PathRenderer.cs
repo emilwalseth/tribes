@@ -1,15 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Characters;
 using UnityEngine;
 
 namespace World
 {
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+    
+    
     public class PathRenderer : MonoBehaviour
     {
 
         [SerializeField] private bool _debug = false;
-        [SerializeField] private List<Vector3> _debugPoints = new List<Vector3>
+        [SerializeField] private GameObject _flagPrefab;
+        [SerializeField] private List<Vector3> _debugPoints = new()
         {
             new Vector3(0, 0, 0),
             new Vector3(10, 0, 0),
@@ -19,46 +24,106 @@ namespace World
         [SerializeField] private float _lineThickness = 0.1f;
         [SerializeField] [Range(0.2f,10f)] private float _lineLength = 1;
         [SerializeField] private float _lineOffset = 0.5f;
+        private GameObject _flag;
     
         private MeshFilter _meshFilter;
-        private MeshRenderer _meshRenderer;
-    
-
-        private void Awake()
-        {
-            _meshFilter = GetComponent<MeshFilter>();
-            _meshRenderer = GetComponent<MeshRenderer>();
-        }
+        private Unit OwningUnit { get; set; }
+        
+        private List<Vector3> _pathPoints = new();
 
         private void OnValidate()
         {
             if (!_debug) return;
-        
-            _meshFilter = GetComponent<MeshFilter>();
-            _meshRenderer = GetComponent<MeshRenderer>();
-
-            MakePath(_debugPoints);
+            _pathPoints = _debugPoints;
+            RebuildPath();
         }
 
-        public void MakePath(List<Vector3> pathPoints)
-        {
 
-            if (pathPoints.Count == 0) return;
+        public void InitiatePath(Unit unit)
+        {
+            if (!unit) return;
+            OwningUnit = unit;
+            _meshFilter = GetComponent<MeshFilter>();
+
+            List<Vector3> path = OwningUnit.CurrentNavigationPath;
+            if (path.Count == 0) return;
+            
+            OwningUnit.CurrentPathRenderer = this;
+            MakeFlag(path[^1]);
+            UpdatePath();
+
+        }
+        
+        private void MakeFlag(Vector3 position)
+        {
+            if (_flag)
+            {
+                _flag.transform.position = position;
+                return;
+            }
+            _flag = Instantiate(_flagPrefab, position, Quaternion.identity);
+            _flag.transform.parent = transform;
+        }
+
+        public void UpdatePath()
+        {
+            // Every Time our character updates its target tile, this will rebuild the path
+            ConvertCharacterPath();
+            RebuildPath();
+        }
+
+        private void UpdateEndpoint()
+        {
+            // This sets the last point of the pathPoints list to the current position of the character
+            _pathPoints[^1] = OwningUnit.transform.position;
+            RebuildPath();
+        }
+
+        private void ConvertCharacterPath()
+        {
+            List<Vector3> unitPath = OwningUnit.CurrentNavigationPath;
+            if (unitPath.Count == 0)
+            {
+                Destroy(transform.gameObject);
+                return;
+            }
+            
+            Vector3 characterPosition = OwningUnit.transform.position;
+            List<Vector3> pathCopy = unitPath.Select(t => t).ToList();
+            pathCopy.Reverse();
+            pathCopy.Add(characterPosition);
+            _pathPoints = pathCopy;
+        }
+
+        private void Update()
+        {
+            UpdateEndpoint();
+        }
+
+
+        private void RebuildPath()
+        {
+            if (_pathPoints.Count == 0) return;
 
             Mesh mesh = new Mesh();
 
             List<Vector3> vertices = new();
             List<Vector2> uvs = new();
             List<int> triangles = new();
-        
-            for (int i = 0; i < pathPoints.Count; i++)
+
+            float uvLength = 0;
+
+            for (int i = 0; i < _pathPoints.Count; i++)
             {
+
+                //if (!ValidatePoint(i, pathPoints[i])) continue;
+                
                 // Check if we can create a line from this point to the next
                 int nextIndex = i + 1;
-                if (nextIndex >= pathPoints.Count) continue;
+                if (nextIndex >= _pathPoints.Count) continue;
             
-                Vector3 thisPoint = pathPoints[i];
-                Vector3 nextPoint = pathPoints[nextIndex];
+                Vector3 thisPoint = _pathPoints[i];
+                Vector3 nextPoint = _pathPoints[nextIndex];
 
                 // Make a line from this point to the next
                 Vector3 direction = (nextPoint - thisPoint).normalized;
@@ -92,8 +157,16 @@ namespace World
                 //       |       |
                 //       |       |
                 //       0-------1
-               
-                float uvLength = length / _lineLength;
+
+
+                
+                // For if we want the UVs to be continuous (makes small weird spots)
+                // Also replace 0 in x of uv to prev
+                //float prev = uvLength;
+                //uvLength += length / _lineLength;
+                
+                
+                uvLength = length / _lineLength;
 
                 uvs.Add(new Vector2(uvLength,0));
                 uvs.Add(new Vector2(uvLength,1));
@@ -109,7 +182,9 @@ namespace World
                 triangles.Add(vertCount + 2);
                 triangles.Add(vertCount + 0);
             }
-
+            
+            //_previousPathPoints = pathPoints;
+            
             mesh.vertices = vertices.ToArray();
             mesh.triangles = triangles.ToArray();
             mesh.uv = uvs.ToArray();
