@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Data.GeneralTiles;
 using Tiles;
 using UnityEngine;
 using World;
@@ -13,10 +14,7 @@ namespace Managers
         public static MapManager Instance { get; private set; }
 
         [SerializeField] private Vector2Int _mapSize = new Vector2Int(10, 15);
-        [SerializeField] private int _tileSize = 1;
-        [SerializeField] private TileScript _grassTilePrefab;
-        [SerializeField] private TileScript _treesTilePrefab;
-        [SerializeField] private TileScript _waterTilePrefab;
+        [SerializeField] private int _tileSize = 2;
         [SerializeField] private GameObject _testObj;
         
     
@@ -25,8 +23,11 @@ namespace Managers
         [SerializeField] private float _noiseFrequency = 100f;
         [SerializeField] private float _waterThreshold = 0.4f;
         [SerializeField] private float _treesThreshold = 0.7f;
+            
+        
+        public int TileSize => _tileSize;
     
-    
+        
         // Private
         private readonly Dictionary<Vector3, TileScript> _mapTiles = new();
 
@@ -84,23 +85,23 @@ namespace Managers
                     // Get noise values (0-1)
                     float noiseValue = Mathf.PerlinNoise((hexCoords.x + _noiseSeed) / _noiseFrequency, (hexCoords.y + _noiseSeed) / _noiseFrequency);
 
-                    // Initiate default tile as grass
-                    TileScript prefab = _grassTilePrefab;
-                
-                    // If the noiseValue is less than the waterThreshold, make the prefab water instead
-                    if (noiseValue < _waterThreshold) prefab = _waterTilePrefab;
-                
-                    // If the noiseValue is above the treesThreshold, make the prefab trees instead
-                    if (noiseValue > _treesThreshold) prefab = _treesTilePrefab;
-                
+                    
                     Vector3 tilePosition = position + transform.position;
 
-                    // Only instantiate the tile if it is not water
-                    TileScript tile = Instantiate(prefab, tilePosition, Quaternion.identity);
-                    tile.transform.SetParent(transform);
-                
+                    TileScript newTile;
+                    
+                    // If the noiseValue is above the treesThreshold, make trees tile
+                    if (noiseValue > _treesThreshold)
+                        newTile = TileManager.Instance.CreateTreesTile(tilePosition);
+                    else if (noiseValue < _waterThreshold)
+                        newTile = TileManager.Instance.CreateWaterTile(tilePosition);
+                    else
+                        newTile = TileManager.Instance.CreateGrassTile(tilePosition);
+                    
+                    newTile.transform.SetParent(transform);
+                    
                     // Add tile to dictionary over all tiles
-                    _mapTiles.Add(Vector3Int.RoundToInt(tilePosition), tile);
+                    _mapTiles.Add(Vector3Int.RoundToInt(tilePosition), newTile);
                 
                 }
             }
@@ -128,7 +129,8 @@ namespace Managers
                 TileScript tile = _mapTiles[pos].GetComponent<TileScript>();
                 openTiles.Remove(pos);
                 if (!tile) continue;
-                if (tile.TileData.TileType == TileTypes.Grass) return tile;
+                
+                if (tile.TileData.TileType == TileType.Generic && tile.IsWalkable) return tile;
             }
 
             return null;
@@ -167,21 +169,14 @@ namespace Managers
             return neighbors;
         }
 
+
+
         public TileScript GetTileAtPosition(Vector3 worldPos)
         {
             Vector3Int tileIndex = Vector3Int.RoundToInt(worldPos);
             return _mapTiles.TryGetValue(tileIndex, out TileScript tile) ? tile : null;
         }
-
-        public void ReplaceTile(TileScript oldTile, TileScript newTile)
-        {
-            Vector3 oldTilePos = oldTile.transform.position; 
-            Vector3Int oldTileIndex = Vector3Int.RoundToInt(oldTilePos);
-            Destroy(oldTile.gameObject);
-            TileScript tile = Instantiate(newTile, oldTilePos, Quaternion.identity);
-            tile.transform.SetParent(transform);
-            _mapTiles[oldTileIndex] = tile;
-        }
+        
 
     }
 }

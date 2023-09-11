@@ -6,6 +6,7 @@ using Managers;
 using Tiles;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Serialization;
 using World;
 
 namespace Characters
@@ -16,7 +17,7 @@ namespace Characters
         
         [SerializeField] private CharacterData _characterData;
         [SerializeField] private CharacterTool _tool;
-        
+        [SerializeField] private MeshFilter _characterMeshFilter;
         
         private Animator _animator;
 
@@ -28,7 +29,6 @@ namespace Characters
         private static readonly int Idle = Animator.StringToHash("Idle");
         private static readonly int Walking = Animator.StringToHash("Walking");
         private static readonly int Hit = Animator.StringToHash("Hit");
-
 
         private void Awake()
         {
@@ -52,7 +52,7 @@ namespace Characters
             SelectionManager.Instance.SelectCharacter(this);
             AnimationManager.Instance.DoBounceAnim(gameObject, 0.25f);
         }
-
+        
         public TileScript GetCurrenTile()
         {
             return CurrentUnit ? CurrentUnit.GetCurrentTile() : null;
@@ -73,6 +73,12 @@ namespace Characters
         {
             SetRenderPathVisibility(true);
         }
+        
+        public void SetUnit(Unit unit)
+        {
+            CurrentUnit = unit;
+            transform.SetParent(unit.transform);
+        }
 
         public void OnDeselected()
         {
@@ -85,6 +91,26 @@ namespace Characters
             {
                 CurrentUnit.CurrentPathRenderer.gameObject.transform.localScale = newVisibility ? Vector3.one : Vector3.zero;
             }
+        }
+        
+        public void SetCharacterData(CharacterData characterData)
+        {
+            _characterData = characterData;
+            UpdateCharacter();
+        }
+        
+        private void UpdateCharacter()
+        {
+            SetCharacterMesh();
+        }
+
+        private void SetCharacterMesh()
+        {
+            _characterMeshFilter.mesh = _characterData.CharacterMesh;
+            Bounds bounds = _characterMeshFilter.mesh.bounds;
+            GetComponent<BoxCollider>().size = bounds.size;
+            GetComponent<BoxCollider>().center = bounds.center;
+
         }
 
         public void SetTool(ToolType toolType)

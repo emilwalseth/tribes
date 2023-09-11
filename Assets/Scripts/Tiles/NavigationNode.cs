@@ -12,8 +12,8 @@ namespace Tiles
 
         
         public NavigationNode Parent { get; set; }
-        public bool IsWalkable => _isWalkable;
-        public int NodeWeight => _nodeWeight;
+        public bool IsWalkable { get => _isWalkable; set => _isWalkable = value; }
+        public int NodeWeight{ get => _nodeWeight; set => _nodeWeight = value; }
         
         public int GCost { get; set; }
         public int HCost { get; set; }

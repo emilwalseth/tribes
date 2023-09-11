@@ -74,6 +74,7 @@ namespace World
 
         private void UpdateEndpoint()
         {
+            if (!OwningUnit) return;
             // This sets the last point of the pathPoints list to the current position of the character
             _pathPoints[^1] = OwningUnit.transform.position;
             RebuildPath();

@@ -11,7 +11,8 @@ namespace UI
 
         public void MakeCampsite()
         {
-            BuildingManager.Instance.MakeCampsite();
+            TileScript tile = SelectionManager.Instance.GetSelectedTile();
+            TileManager.Instance.CreateTown(tile);
         }
 
         public void StartWoodChopping()

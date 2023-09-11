@@ -11,31 +11,58 @@ namespace Managers
         public static UnitManager Instance { get; private set; }
 
         [SerializeField] private Unit _unitPrefab;
-        [SerializeField] private Character _heroPrefab;
+        [SerializeField] private Character _characterPrefab;
+        [SerializeField] private CharacterData _heroData;
+        [SerializeField] private CharacterData _minionData;
 
         private void Awake() => Instance = this;
 
 
-        private Unit SpawnUnit(TileScript spawnTile)
+        public Unit SpawnUnit(TileScript spawnTile, Unit splitFrom = null)
         {
-            Vector3 spawnPosition = spawnTile.transform.position;
-            Unit spawnedUnit = Instantiate(_unitPrefab, spawnPosition, Quaternion.identity);
-            spawnedUnit.SetCurrentTile(spawnPosition);
+            Unit spawnedUnit = SpawnUnitInternal(spawnTile);
+
+            if (splitFrom)
+            {
+                spawnedUnit.RecentSplitUnit = splitFrom;
+                splitFrom.RecentSplitUnit = spawnedUnit;
+            }
+            
+            spawnedUnit.SetCurrentTile(spawnedUnit.transform.position);
             return spawnedUnit;
         }
 
-        public Character SpawnHero()
+        private Unit SpawnUnitInternal(TileScript spawnTile)
         {
-            TileScript tile = MapManager.Instance.GetRandomGrassTile();
-            Unit heroUnit = SpawnUnit(tile);
+            Vector3 spawnPosition = spawnTile.transform.position;
+            Unit spawnedUnit = Instantiate(_unitPrefab, spawnPosition, Quaternion.identity);
+            return spawnedUnit;
+            
+        }
 
-            Character hero = Instantiate(_heroPrefab, tile.transform);
-            heroUnit.AddCharacter(hero);
-            hero.CurrentUnit = heroUnit;
-            hero.transform.parent = heroUnit.transform;
-            EventManager.Instance.onHeroSpawned?.Invoke(hero);
+        public Character SpawnHero(TileScript spawnTile)
+        {
+            return SpawnCharacter(spawnTile, _heroData);
+        }
+        
+        public Character SpawnMinion(TileScript spawnTile)
+        {
+            return SpawnCharacter(spawnTile, _minionData);
+        }
 
-            return hero;
+        private Character SpawnCharacter(TileScript spawnTile, CharacterData characterData)
+        {
+            Unit unit = SpawnUnitInternal(spawnTile);
+
+            Character character = Instantiate(_characterPrefab, spawnTile.transform);
+            character.SetCharacterData(characterData);
+            unit.AddCharacter(character);
+            character.CurrentUnit = unit;
+            character.transform.parent = unit.transform;
+            
+            unit.SetCurrentTile(spawnTile.transform.position);
+
+            return character;
         }
     
     }

@@ -13,7 +13,7 @@ namespace Managers
         [SerializeField] private AnimationCurve _bounceCurve;
 
 
-        public void DoBounceAnim(GameObject animObject, float duration)
+        public void DoBounceAnim(GameObject animObject, float duration = 0.25f)
         {
             StartCoroutine(BounceAnim(animObject, duration));
         }

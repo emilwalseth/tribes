@@ -19,6 +19,7 @@ namespace Managers
 
         public List<TileScript> SelectedTiles { get; private set; } = new();
         public Character SelectedCharacter { get; private set; }
+        public Unit SelectedUnit { get; private set; }
 
 
         private readonly List<SelectionObject> _currentSelectionObjects = new();
@@ -34,15 +35,21 @@ namespace Managers
                     tile.OnDeselected();
                 }
             }
+            
+            DeselectCharacter();
             DestroySelectionObjects();
         }
 
-        public void SelectTilesInRadius(int radius, TileScript centerTile)
+        public void SelectTilesInRadius(int radius, TileScript centerTile, bool onlyWalkable = false)
         {
             List<TileScript> selectTiles = new() { centerTile };
             if (radius != 0)
             {
                 selectTiles = GetRadius(radius, centerTile);
+                if (onlyWalkable)
+                {
+                    selectTiles = selectTiles.Where(tile => tile.TileData.IsWalkable).ToList();
+                }
             }
             SelectTiles(selectTiles);
         }
@@ -53,8 +60,7 @@ namespace Managers
             {
                 Destroy(selectionObject.gameObject);
             }
-            DeselectCharacter();
-
+            
             _currentSelectionObjects.Clear();
         }
 
@@ -98,25 +104,41 @@ namespace Managers
     
         public void SelectCharacter(Character character)
         {
-            if (!character || character == SelectedCharacter)
-            {
-                Deselect();
-                return;
-            }
-
-            
             TileScript currentTile = character.GetCurrenTile();
-            if (currentTile)
+            
+            if (!SelectedUnit && SelectedUnit != character.CurrentUnit && character.CurrentUnit.CharactersInUnit.Count > 1)
             {
-                SelectTilesInRadius(character.CharacterData._selectionRadius, currentTile);
-                TryOpenMenu(character);
+                SelectedCharacter = null;
+                SelectedUnit = character.CurrentUnit;
+                AnimationManager.Instance.DoBounceAnim(SelectedUnit.gameObject);
                 
+                if (!currentTile) return;
+                SelectTilesInRadius(SelectedUnit.GetUnitWalkRadius(), currentTile, true);
+                TryOpenMenu(character);
+
+            }
+            else
+            {
+                SelectedUnit = null;
+                
+                if (!character || character == SelectedCharacter)
+                {
+                    Deselect();
+                    return;
+                }
+
+                if (currentTile)
+                {
+                    SelectTilesInRadius(character.CharacterData.WalkRadius, currentTile, true);
+                    TryOpenMenu(character);
+                }
+                
+                character.OnSelected();
+                DeselectCharacter();
+                SelectedCharacter = character;
             }
             
-            character.OnSelected();
-            DeselectCharacter();
-            SelectedCharacter = character;
-    
+
         }
         
         private void TryOpenMenu(Character character)
@@ -133,16 +155,27 @@ namespace Managers
         
         public void UpdateCharacterSelection()
         {
-            if (!SelectedCharacter) return;
+            if (SelectedCharacter)
+            {
+                Character character = SelectedCharacter;
+                TileScript currentTile = character.GetCurrenTile();
+            
+                if (currentTile) SelectTilesInRadius(character.CharacterData.WalkRadius, currentTile, true);
+                character.OnSelected();
+                SelectedCharacter = character;
+                TryOpenMenu(character);
+            }
+            else if (SelectedUnit)
+            {
+                Unit unit = SelectedUnit;
+                TileScript currentTile = unit.GetCurrentTile();
+                
+                if (currentTile) SelectTilesInRadius(unit.GetUnitWalkRadius(), currentTile, true);
+                SelectedUnit = unit;
+                
+            }
 
-            Character character = SelectedCharacter;
-            TileScript currentTile = character.GetCurrenTile();
-            
-            
-            if (currentTile) SelectTilesInRadius(character.CharacterData._selectionRadius, currentTile);
-            character.OnSelected();
-            SelectedCharacter = character;
-            TryOpenMenu(character);
+
 
 
         }
@@ -151,6 +184,7 @@ namespace Managers
         {
             if (!SelectedCharacter) return;
             SelectedCharacter.OnDeselected();
+            SelectedUnit = null;
             SelectedCharacter = null;
             UIManager.instance.CloseMenu();
         }

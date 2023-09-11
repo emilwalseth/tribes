@@ -1,4 +1,7 @@
 using System.Collections;
+using System.Collections.Generic;
+using Characters;
+using Tiles;
 using UnityEngine;
 
 
@@ -22,11 +25,26 @@ namespace Managers
             EventManager.Instance.onMapGenerated += () => StartCoroutine(SpawnHero());
         }
         
-        private IEnumerator SpawnHero()
+        private static IEnumerator SpawnHero()
         {
             yield return null;
+            
             // Spawn the hero at a random tile
-            UnitManager.Instance.SpawnHero();
+            TileScript tile = MapManager.Instance.GetRandomGrassTile();
+            TileManager.Instance.CreateTown(tile);
+
+            List<TileScript> neighbors = MapManager.Instance.GetTileNeighbors(tile.gameObject);
+            
+            TileScript spawnTile = neighbors[Random.Range(0, neighbors.Count)];
+            neighbors.Remove(spawnTile);
+            TileManager.Instance.SetGrass(spawnTile);
+            
+            TileScript forestTile = neighbors[Random.Range(0, neighbors.Count)];
+            TileManager.Instance.SetForest(forestTile);
+            
+            Character hero = UnitManager.Instance.SpawnHero(spawnTile);
+            EventManager.Instance.onHeroSpawned?.Invoke(hero);
+            
         }
 
 
