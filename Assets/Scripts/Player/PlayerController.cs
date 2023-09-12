@@ -13,6 +13,7 @@ namespace Player
 
         [Header("General")]
         [SerializeField] private Camera _camera;
+        [SerializeField] private Camera _otherCamera;
 
         // Interaction variables
         private Vector3 _startClickPosition;
@@ -57,6 +58,12 @@ namespace Player
                 QualitySettings.vSyncCount = 0;
             }
 
+        }
+        
+        private void SetCameraOrthographicSize(float size)
+        {
+            _camera.orthographicSize = size;
+            _otherCamera.orthographicSize = size;
         }
 
         // Update is called once per frame
@@ -312,8 +319,7 @@ namespace Player
                 Vector3 centerWorldBefore = _camera.ScreenToWorldPoint(currentCenter);
             
                 // Do the zoom
-                _camera.orthographicSize = _targetZoom;
-
+                SetCameraOrthographicSize(_targetZoom);
                 // Get world point after
                 Vector3 centerWorldAfter = _camera.ScreenToWorldPoint(currentCenter);
             
@@ -361,7 +367,7 @@ namespace Player
             
                 // Do the zoom
                 // Apply zoom lerping for smooth zooming
-                _camera.orthographicSize = Mathf.Lerp(currentZoom, _targetZoom, 15 * Time.deltaTime);
+                SetCameraOrthographicSize(Mathf.Lerp(currentZoom, _targetZoom, 15 * Time.deltaTime));
             
                 Vector3 centerAfter = _camera.ScreenToWorldPoint(Input.mousePosition);
             
@@ -436,18 +442,23 @@ namespace Player
             const float maxBounce = 4f;
             const float minBounce = 1f;
         
+            float size = _camera.orthographicSize;
+            
             // If the camera is zoomed all the way in or out, move the camera a bit back to give some feedback to the user
-            if (_camera.orthographicSize < _zoomMaxMin.x + minBounce)
+            if (size < _zoomMaxMin.x + minBounce)
             {
-                _camera.orthographicSize = Mathf.Lerp(_camera.orthographicSize, _zoomMaxMin.x + minBounce, 3f * Time.deltaTime);
-                _camera.orthographicSize = Mathf.Round(_camera.orthographicSize * 1000.0f) * 0.001f;
-                _targetZoom = _camera.orthographicSize;
+                size = Mathf.Lerp(size, _zoomMaxMin.x + minBounce, 3f * Time.deltaTime);
+                size = Mathf.Round(size * 1000.0f) * 0.001f;
+                SetCameraOrthographicSize(size);
+                _targetZoom = size;
             }
-            if (_camera.orthographicSize > _zoomMaxMin.y - maxBounce)
+            if (size > _zoomMaxMin.y - maxBounce)
             {
-                _camera.orthographicSize = Mathf.Lerp(_camera.orthographicSize, _zoomMaxMin.y - maxBounce, 3f * Time.deltaTime);
-                _camera.orthographicSize = Mathf.Round(_camera.orthographicSize * 1000.0f) * 0.001f;
-                _targetZoom = _camera.orthographicSize;
+ 
+                size = Mathf.Lerp(size, _zoomMaxMin.y - maxBounce, 3f * Time.deltaTime);
+                size = Mathf.Round(size * 1000.0f) * 0.001f;
+                SetCameraOrthographicSize(size);
+                _targetZoom = size;
             }
         }
     

@@ -33,14 +33,19 @@ namespace Tiles
             
             Unit chosenUnit = selectedUnit;
             
+            // If there is only one character selected, split it from its current unit, and give it a new unit
             if (!chosenUnit && selectedCharacter)
             {
                 if (selectedCharacter.GetCurrenTile() != this)
                 {
-                    selectedCharacter.CurrentUnit.SplitFromUnit(selectedCharacter);
-                    chosenUnit = selectedCharacter.CurrentUnit;
+                    if (SelectionManager.Instance.IsTileSelected(this))
+                    {
+                        selectedCharacter.CurrentUnit.SplitFromUnit(selectedCharacter);
+                        chosenUnit = selectedCharacter.CurrentUnit;
+                    }
                 }
             }
+            // If there is a unit selected, move it to this tile
             if (chosenUnit)
             {
                 TileScript currentTile = chosenUnit.GetCurrentTile();
@@ -55,9 +60,11 @@ namespace Tiles
                 }
             }
             
+            // Select tiles in radius
+            SelectionManager.Instance.DeselectAll();
             SelectionManager.Instance.SelectTilesInRadius(GetSelectionRadius(), this);
 
-            if (TownTile)
+            if (TownTile && TownTile != this && this.TileData.TileType != TileType.Building)
             {
                 UIManager.instance.OpenBuildMenu(this);
             }
@@ -88,6 +95,7 @@ namespace Tiles
         public void SetTown(TileScript townTile)
         {
             _townTile = townTile;
+            TileManager.Instance.SetTileGround(this);
         }
         
         public void SetTileData(TileData tileData)

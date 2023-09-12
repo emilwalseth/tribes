@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: WaterTile
   m_EditorClassIdentifier: 
   _tileType: 0
-  _groundType: 1
+  _groundType: 2
   _selectionRadius: 0
   _movementCost: 0
   _isWalkable: 0

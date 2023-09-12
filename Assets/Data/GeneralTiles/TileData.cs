@@ -15,6 +15,7 @@ namespace Data.GeneralTiles
     public enum GroundType
     {
         Grass,
+        Town,
         Water,
     }
     
@@ -28,7 +29,7 @@ namespace Data.GeneralTiles
         [SerializeField] private int _selectionRadius;
         
         [Header("Navigation")]
-        [SerializeField] private int _movementCost;
+        [SerializeField] private int _movementCost = 0;
         [SerializeField] private bool _isWalkable = true;
         
         [Header("Visual")]

@@ -10,14 +10,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5070f371427266143af5c2daa6190674, type: 3}
-  m_Name: HutData
+  m_Name: TentData
   m_EditorClassIdentifier: 
   _tileType: 2
   _groundType: 0
   _selectionRadius: 0
   _movementCost: 0
   _isWalkable: 1
-  _tile: {fileID: 919132149155446097, guid: 1adbc18fa9e1d8f4a948c9a9089346be, type: 3}
+  _tile: {fileID: 7069355164461558691, guid: 061ae5e7c46b145478380ff7f775f1ce, type: 3}
   _menuOptions: []
   _onTilePlaced:
   - {fileID: 11400000, guid: eae447b9aef0ad647b7fcf4cebee846e, type: 2}

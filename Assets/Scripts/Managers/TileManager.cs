@@ -17,6 +17,7 @@ namespace Managers
         [Space(10)]
         [Header("Ground Meshes")]
         [SerializeField] private Mesh _grassGround;
+        [SerializeField] private Mesh _townGround;
         [SerializeField] private Mesh _waterGround;
         [Space(10)]
         [Header("Tile Data")]
@@ -41,18 +42,29 @@ namespace Managers
         
         public void SetTileGround(TileScript tile)
         {
+            if (tile.TownTile && tile.TileData.GroundType != GroundType.Water)
+            {
+                tile.SetGround(_townGround);
+                return;
+            }
             
             switch(tile.TileData.GroundType)
             {
                 case GroundType.Grass:
                     tile.SetGround(_grassGround);
                     break;
+                case GroundType.Town:
+                    tile.SetGround(_townGround);
+                    break;
                 case GroundType.Water:
                     tile.SetGround(_waterGround);
                     break;
+                default:
+                    tile.SetGround(_grassGround);
+                    break;
             }
             
-            SelectionManager.Instance.Deselect();
+            SelectionManager.Instance.DeselectAll();
         }
         
         public void PlaceBuilding(TileScript tile, BuildingTileData buildingData)
@@ -64,13 +76,13 @@ namespace Managers
             if (!tileData) return;
             
             tile.SetTileData(tileData);
-            SelectionManager.Instance.Deselect();
+            SelectionManager.Instance.DeselectAll();
         }
         
         public void CreateTown(TileScript tile)
         {
             SetTileData(tile, _campsiteTileData);
-            SelectionManager.Instance.Deselect();
+            SelectionManager.Instance.DeselectAll();
         }
         
         public TileScript CreateGrassTile(Vector3 position)
@@ -89,12 +101,12 @@ namespace Managers
         public void SetGrass(TileScript tile)
         {
             SetTileData(tile, _grassTileData);
-            SelectionManager.Instance.Deselect();
+            SelectionManager.Instance.DeselectAll();
         }
         public void SetForest(TileScript tile)
         {
             SetTileData(tile, _treesTileData);
-            SelectionManager.Instance.Deselect();
+            SelectionManager.Instance.DeselectAll();
         }
         
     }

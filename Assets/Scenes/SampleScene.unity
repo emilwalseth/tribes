@@ -386,7 +386,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 44a129f3afdd73f428592434002a7033, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _selectionObjectPrefab: {fileID: 8421344622248822399, guid: e6bb705bf17acc041b5223f220c80de7, type: 3}
+  _tileSelectionObjectPrefab: {fileID: 8421344622248822399, guid: e6bb705bf17acc041b5223f220c80de7, type: 3}
+  _characterSelectionObjectPrefab: {fileID: 7666087964095786184, guid: 48e5b1c04107a0f47a527b2e3af50ad9, type: 3}
+  _unitSelectionObjectPrefab: {fileID: 5480036056704652212, guid: d69c6c45acca69d488f7641bc08fa33e, type: 3}
 --- !u!114 &519694716
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -446,6 +448,30 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  _easeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0.11697962
+      outSlope: 0.11697962
+      tangentMode: 0
+      weightedMode: 3
+      inWeight: 0
+      outWeight: 0.7664648
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0.12330127
+      outSlope: 0.12330127
+      tangentMode: 0
+      weightedMode: 3
+      inWeight: 0.8712954
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
 --- !u!114 &519694718
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -460,6 +486,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _baseTile: {fileID: 3677227330552051745, guid: 68086a304a0aa2a48a98bab4baeea195, type: 3}
   _grassGround: {fileID: -2041144969986664275, guid: 01da7899d8d2f764a823e103f34cce0a, type: 3}
+  _townGround: {fileID: 4331684222227741103, guid: 141c47bbb07d26448a9b26ce501959f5, type: 3}
   _waterGround: {fileID: 0}
   _grassTileData: {fileID: 11400000, guid: 3d8d7c38963e07a48aaf6a73b674c463, type: 2}
   _waterTileData: {fileID: 11400000, guid: f419d7bf8089cf5469245f1433373890, type: 2}

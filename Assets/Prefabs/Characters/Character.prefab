@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 166507179751604884}
   - component: {fileID: 7153076309369512164}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Trail
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -157,7 +157,7 @@ GameObject:
   - component: {fileID: 7635274914298876217}
   - component: {fileID: 5277892778596348001}
   - component: {fileID: 4861725427248797211}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Tool
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -257,7 +257,7 @@ GameObject:
   - component: {fileID: 959367259071641032}
   - component: {fileID: 720721757836564084}
   - component: {fileID: 9174613767892990811}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Mesh
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -341,7 +341,7 @@ GameObject:
   - component: {fileID: 8745703957762807732}
   - component: {fileID: 3350795048599522525}
   - component: {fileID: 2443874068801642038}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Character
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -401,7 +401,6 @@ MonoBehaviour:
   _characterData: {fileID: 11400000, guid: e4dcb9ae6d6be0646a7ac4689a173eb4, type: 2}
   _tool: {fileID: 4861725427248797211}
   _characterMeshFilter: {fileID: 720721757836564084}
-  _boxCollider: {fileID: 2443874068801642038}
 --- !u!65 &2443874068801642038
 BoxCollider:
   m_ObjectHideFlags: 0

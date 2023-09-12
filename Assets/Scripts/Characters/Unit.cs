@@ -52,7 +52,7 @@ namespace Characters
             
             CharactersInUnit.Remove(character);
             
-            Unit newUnit = UnitManager.Instance.SpawnUnit(GetCurrentTile(), this);
+            Unit newUnit = UnitManager.Instance.SplitUnit(this);
             character.SetUnit(newUnit);
             newUnit.AddCharacter(character);
             newUnit.RepositionCharacters();
@@ -74,6 +74,8 @@ namespace Characters
         {
             if (unit == RecentSplitUnit) return;
             
+            bool wasSelected = SelectionManager.Instance.SelectedUnit == unit || SelectionManager.Instance.SelectedUnit == this;
+            
             foreach (Character character in unit.CharactersInUnit)
             {
                 if (CharactersInUnit.Count >= 7)
@@ -85,10 +87,19 @@ namespace Characters
                     unit.SetCurrentTile(fallbackTilePos);
                     break;
                 }
+
+                if (SelectionManager.Instance.SelectedCharacter == character)
+                    wasSelected = true;
+                
                 character.SetUnit(this);
                 CharactersInUnit.Add(character);
             }
-            SelectionManager.Instance.Deselect();
+            
+            SelectionManager.Instance.DeselectAll();
+            
+            if (wasSelected)
+                SelectionManager.Instance.SelectUnit(this);
+            
             unit.CharactersInUnit.Clear();
             unit.DestroyIfEmpty();
             RepositionCharacters();
@@ -174,7 +185,7 @@ namespace Characters
                 
                 Vector2 newPos = _characterConfigurations[configIndex][i];
                 Vector3 position = new Vector3(newPos.x, 0, newPos.y) * MapManager.Instance.TileSize;
-                character.transform.SetLocalPositionAndRotation(position, Quaternion.identity);
+                AnimationManager.Instance.DoMoveToAnimation(character.gameObject, position, 0.4f, false);
             }
             UpdateCharactersMoving();
         }
@@ -186,39 +197,9 @@ namespace Characters
 
         public void SetCurrentTile(Vector3 newTilePos)
         {
-            TileScript oldTile = GetCurrentTile();
-            TileScript newTile = MapManager.Instance.GetTileAtPosition(newTilePos);
-
-            // Clear the old occupant, if it is not the split unit
-            if (oldTile.Occupant)
-            {
-                if (oldTile.Occupant != RecentSplitUnit)
-                {
-                    oldTile.ClearOccupant();
-                }
-            }
-
-            // Set the occupant of new tile, if it is not the split unit
-            if (newTile.Occupant)
-            {
-                if (newTile.Occupant != RecentSplitUnit)
-                {
-                    newTile.Occupant.CombineWithUnit(this);
-                }
-            }
-            // If there is no occupant at the new tile, set this as the occupant
-            else
-            {
-                newTile.SetOccupant(this);
-            }
-            
-            
             _currentTilePosition = newTilePos;
-            
-            
-   
-
         }
+        
         
         public TileScript GetCurrentTile()
         {
@@ -250,21 +231,60 @@ namespace Characters
         public void NavigateToTile(TileScript targetTile)
         {
             TileScript currentTile = GetCurrentTile();
+            ClearOccupant(currentTile);
 
             if (currentTile == targetTile) return;
             List<NavigationNode> path = NavigationManager.FindPath(currentTile, targetTile);
+            if (path.Count > GetUnitWalkRadius() + 4)
+                return;
+            
             SetNewNavigationPath(path);
         }
 
         private void UpdateCharactersMoving()
         {
-            _charactersInUnit.ForEach(character => character.SetIsMoving(State == UnitState.Moving));
+            if (CharactersInUnit.Count == 0) return;
+            
+            CharactersInUnit.ForEach(character => character.SetIsMoving(State == UnitState.Moving));
+            
+
         }
 
         private void OnArrivedTarget()
         {
             State = UnitState.Idle;
             UpdateCharactersMoving();
+            SetNewOccupant(GetCurrentTile());
+        }
+
+        private void ClearOccupant(TileScript tile)
+        {
+            if (!tile) return;
+            
+            // Clear the old occupant, if it is not the split unit
+            if (tile.Occupant)
+            {
+                if (tile.Occupant != RecentSplitUnit)
+                {
+                    tile.ClearOccupant();
+                }
+            }
+        }
+
+        public void SetNewOccupant(TileScript tile)
+        {
+            // Set the occupant of new tile, if it is not the split unit
+            if (tile.Occupant)
+            {
+                if (tile.Occupant != RecentSplitUnit)
+                {
+                    tile.Occupant.CombineWithUnit(this);
+                }
+            }
+            else
+            {
+                tile.SetOccupant(this);
+            }
         }
 
         private void MoveAlongPath()
@@ -283,19 +303,17 @@ namespace Characters
             // We are close enough to the point to go to next point.
             if (distance < 0.1f)
             {
-                SetCurrentTile(CurrentNavigationPath[0]);
-                CurrentNavigationPath.RemoveAt(0);
-                
                 if (RecentSplitUnit)
                 {
                     RecentSplitUnit.RecentSplitUnit = null;
                     RecentSplitUnit = null;
                 }
                 
+                SetCurrentTile(CurrentNavigationPath[0]);
+                CurrentNavigationPath.RemoveAt(0);
+                
                 if (CurrentNavigationPath.Count == 0)
-                {
                     OnArrivedTarget();
-                };
                 
                 CurrentPathRenderer.UpdatePath();
                 SelectionManager.Instance.UpdateCharacterSelection();

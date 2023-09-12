@@ -37,13 +37,17 @@ namespace Characters
 
         public void SetIsMoving(bool newIsMoving)
         {
+            _animator.Update(0);
+            
             if (newIsMoving)
             {
                 _animator.CrossFade(Walking, 0.1f, 0);
+   
             }
             else
             {
                 _animator.CrossFade(Idle, 0.1f, 0);
+
             }
         }
 

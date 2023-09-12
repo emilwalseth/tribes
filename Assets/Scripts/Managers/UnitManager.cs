@@ -18,24 +18,21 @@ namespace Managers
         private void Awake() => Instance = this;
 
 
-        public Unit SpawnUnit(TileScript spawnTile, Unit splitFrom = null)
+        public Unit SplitUnit(Unit splitFrom)
         {
-            Unit spawnedUnit = SpawnUnitInternal(spawnTile);
-
-            if (splitFrom)
-            {
-                spawnedUnit.RecentSplitUnit = splitFrom;
-                splitFrom.RecentSplitUnit = spawnedUnit;
-            }
             
-            spawnedUnit.SetCurrentTile(spawnedUnit.transform.position);
+            Unit spawnedUnit = SpawnUnitInternal(splitFrom.transform.position, splitFrom.GetCurrentTile());
+            
+            spawnedUnit.RecentSplitUnit = splitFrom;
+            splitFrom.RecentSplitUnit = spawnedUnit;
+            
             return spawnedUnit;
         }
 
-        private Unit SpawnUnitInternal(TileScript spawnTile)
+        private Unit SpawnUnitInternal(Vector3 spawnPos, TileScript startTile)
         {
-            Vector3 spawnPosition = spawnTile.transform.position;
-            Unit spawnedUnit = Instantiate(_unitPrefab, spawnPosition, Quaternion.identity);
+            Unit spawnedUnit = Instantiate(_unitPrefab, spawnPos, Quaternion.identity);
+            spawnedUnit.SetCurrentTile(startTile.transform.position);
             return spawnedUnit;
             
         }
@@ -52,15 +49,14 @@ namespace Managers
 
         private Character SpawnCharacter(TileScript spawnTile, CharacterData characterData)
         {
-            Unit unit = SpawnUnitInternal(spawnTile);
+            Unit unit = SpawnUnitInternal(spawnTile.transform.position, spawnTile);
 
             Character character = Instantiate(_characterPrefab, spawnTile.transform);
             character.SetCharacterData(characterData);
             unit.AddCharacter(character);
             character.CurrentUnit = unit;
             character.transform.parent = unit.transform;
-            
-            unit.SetCurrentTile(spawnTile.transform.position);
+            unit.SetNewOccupant(spawnTile);
 
             return character;
         }

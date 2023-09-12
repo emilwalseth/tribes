@@ -11,6 +11,7 @@ namespace Managers
         private void Awake() => Instance = this;
 
         [SerializeField] private AnimationCurve _bounceCurve;
+        [SerializeField] private AnimationCurve _easeCurve;
 
 
         public void DoBounceAnim(GameObject animObject, float duration = 0.25f)
@@ -28,6 +29,11 @@ namespace Managers
             StartCoroutine(FadeSpriteAnim(sprite, duration, fadeTo));
         }
         
+        public void DoMoveToAnimation(GameObject animObject, Vector3 destination, float duration, bool worldSpace = true)
+        {
+            StartCoroutine(MoveToAnim(animObject, destination, duration, worldSpace));
+        }
+        
         private static IEnumerator MoveAnim(GameObject animObject, Vector3 direction, float duration, float speed)
         {
             float moveAmount = (speed / duration) * Time.deltaTime;
@@ -35,8 +41,8 @@ namespace Managers
             
             while (Time.realtimeSinceStartup < targetTime)
             {
-                animObject.transform.position += moveAmount * direction.normalized;
-                
+                    animObject.transform.position += moveAmount * direction.normalized;
+
                 yield return null;
             }
         }
@@ -52,6 +58,26 @@ namespace Managers
                 Color color = sprite.color;
                 percent = Mathf.InverseLerp(startTime, startTime + duration, Time.realtimeSinceStartup);
                 sprite.color = new Color(color.r, color.g, color.b, Mathf.Lerp(startOpacity, fadeTo, percent));
+                yield return null;
+            }
+        }
+        
+        private IEnumerator MoveToAnim(GameObject animObject, Vector3 destination, float duration, bool worldSpace = true)
+        {
+            Vector3 startPos = worldSpace ? animObject.transform.position : animObject.transform.localPosition;
+            float startTime = Time.realtimeSinceStartup;
+            float percent = 0;
+            
+            while (Math.Abs(percent - 1) > 0)
+            {   
+                percent = Mathf.InverseLerp(startTime, startTime + duration, Time.realtimeSinceStartup);
+                float value = _easeCurve.Evaluate(percent);
+
+                if (worldSpace)
+                    animObject.transform.position = Vector3.Lerp(startPos, destination, value);
+                else
+                    animObject.transform.localPosition = Vector3.Lerp(startPos, destination, value);
+                
                 yield return null;
             }
 
