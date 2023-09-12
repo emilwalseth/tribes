@@ -64,7 +64,7 @@ namespace Tiles
             SelectionManager.Instance.DeselectAll();
             SelectionManager.Instance.SelectTilesInRadius(GetSelectionRadius(), this);
 
-            if (TownTile && TownTile != this && this.TileData.TileType != TileType.Building)
+            if (TownTile && TownTile != this && TileData.TileType != TileType.Building && TileData.GroundType != GroundType.Water)
             {
                 UIManager.instance.OpenBuildMenu(this);
             }
