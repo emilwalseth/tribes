@@ -58,6 +58,7 @@ namespace Managers
             character.CurrentUnit = unit;
             character.transform.parent = unit.transform;
             unit.SetNewOccupant(spawnTile);
+            AnimationManager.Instance.DoBounceAnim(character.gameObject);
 
             return character;
         }
