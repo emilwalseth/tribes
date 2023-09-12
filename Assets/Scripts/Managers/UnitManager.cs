@@ -52,6 +52,7 @@ namespace Managers
             Unit unit = SpawnUnitInternal(spawnTile.transform.position, spawnTile);
 
             Character character = Instantiate(_characterPrefab, spawnTile.transform);
+            character.transform.localRotation = Quaternion.Euler(0,-135,0);
             character.SetCharacterData(characterData);
             unit.AddCharacter(character);
             character.CurrentUnit = unit;
