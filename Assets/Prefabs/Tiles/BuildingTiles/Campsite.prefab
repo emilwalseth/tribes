@@ -61,16 +61,28 @@ PrefabInstance:
       value: FireVFX
       objectReference: {fileID: 0}
     - target: {fileID: 9151707530635323283, guid: fcae3e89143ad6a468e6a89840781500, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 9151707530635323283, guid: fcae3e89143ad6a468e6a89840781500, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 9151707530635323283, guid: fcae3e89143ad6a468e6a89840781500, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 9151707530635323283, guid: fcae3e89143ad6a468e6a89840781500, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9151707530635323283, guid: fcae3e89143ad6a468e6a89840781500, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.114
       objectReference: {fileID: 0}
     - target: {fileID: 9151707530635323283, guid: fcae3e89143ad6a468e6a89840781500, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 0.011
       objectReference: {fileID: 0}
     - target: {fileID: 9151707530635323283, guid: fcae3e89143ad6a468e6a89840781500, type: 3}
       propertyPath: m_LocalRotation.w
