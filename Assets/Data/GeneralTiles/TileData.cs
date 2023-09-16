@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Data.Actions;
 using UnityEngine;
@@ -17,6 +18,7 @@ namespace Data.GeneralTiles
         Grass,
         Town,
         Water,
+        Stone,
     }
     
     [CreateAssetMenu(fileName = "TileData", menuName = "ScriptableObjects/TileData", order = 1)]
@@ -24,6 +26,7 @@ namespace Data.GeneralTiles
     {
 
         [Header("General")]
+        [SerializeField] private string _tileName;
         [SerializeField] private TileType _tileType;
         [SerializeField] private GroundType _groundType;
         [SerializeField] private int _selectionRadius;
@@ -41,6 +44,7 @@ namespace Data.GeneralTiles
         [Header("Actions")] 
         [SerializeField] private List<ScriptableAction> _onTilePlaced;
         
+        public string TileName => _tileName;
         public TileType TileType => _tileType;
         public GroundType GroundType => _groundType;
         public int SelectionRadius => _selectionRadius;

@@ -10,8 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5070f371427266143af5c2daa6190674, type: 3}
-  m_Name: TreesTile
+  m_Name: ForestTile
   m_EditorClassIdentifier: 
+  _tileName: Forest
   _tileType: 1
   _groundType: 0
   _selectionRadius: 0

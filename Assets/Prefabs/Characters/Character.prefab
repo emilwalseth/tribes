@@ -245,6 +245,7 @@ MonoBehaviour:
   _toolMeshes:
   - {fileID: 4858409200373445378, guid: 9e32b615809d2584dad36ccbc6c2750f, type: 3}
   - {fileID: -6209352604233133889, guid: f460a23d9ed0ba54da07cef2fbdaa455, type: 3}
+  - {fileID: -3996457117637163648, guid: 28f131ffd3ffad34bbed6534d95dbd0a, type: 3}
   _toolType: 1
 --- !u!1 &5415430646825399434
 GameObject:
@@ -401,6 +402,9 @@ MonoBehaviour:
   _characterData: {fileID: 11400000, guid: e4dcb9ae6d6be0646a7ac4689a173eb4, type: 2}
   _tool: {fileID: 4861725427248797211}
   _characterMeshFilter: {fileID: 720721757836564084}
+  _enemyMenuOptions:
+  - {fileID: 3862614924149558315, guid: 461fc7ca1a7a72e4287a9a6add46e740, type: 3}
+  _teamMenuOptions: []
 --- !u!65 &2443874068801642038
 BoxCollider:
   m_ObjectHideFlags: 0

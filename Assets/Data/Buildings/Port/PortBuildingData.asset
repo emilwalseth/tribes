@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 099440aae865069438e1d5ad3b136290, type: 3}
+  m_Name: PortBuildingData
+  m_EditorClassIdentifier: 
+  _buildingData:
+    _tileData: {fileID: 11400000, guid: 8e40684ad0347d648953f3574cb8d21c, type: 2}
+    _placedOn: 2
+    _buildRequirements:
+      _resources:
+      - _resourceData: {fileID: 11400000, guid: 1ea5600e990dd8b43b0f104b3cac7c2c, type: 2}
+        _amount: 5

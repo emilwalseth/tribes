@@ -12,9 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5070f371427266143af5c2daa6190674, type: 3}
   m_Name: GrassTile
   m_EditorClassIdentifier: 
+  _tileName: Grass
   _tileType: 0
   _groundType: 0
+  _selectionRadius: 0
   _movementCost: 0
   _isWalkable: 1
   _tile: {fileID: 0}
   _menuOptions: []
+  _onTilePlaced: []

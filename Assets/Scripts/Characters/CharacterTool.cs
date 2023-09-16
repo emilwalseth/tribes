@@ -9,6 +9,7 @@ namespace Characters
         None,
         Axe,
         Sword,
+        Pick
     }
     
     
@@ -16,7 +17,7 @@ namespace Characters
     public class CharacterTool : MonoBehaviour
     {
         
-        [SerializeField] private List<Mesh> _toolMeshes = new List<Mesh>();
+        [SerializeField] private List<Mesh> _toolMeshes = new();
         [SerializeField] private ToolType _toolType = ToolType.None;
         
         private MeshFilter _meshFilter;

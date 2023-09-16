@@ -30,12 +30,11 @@ namespace Managers
             OpenMenu();
         }
         
-        public void OpenContextMenu(TileScript tile)
+        public void OpenContextMenu(List<RectTransform> menuOptions)
         {
             CloseMenu();
             
-            List<RectTransform> options = tile.TileData.MenuOptions;
-            _contextMenu.MakeContextMenu(options);
+            _contextMenu.MakeContextMenu(menuOptions);
             _openMenu = _contextMenu.gameObject.GetComponent<RectTransform>();
             
             OpenMenu();

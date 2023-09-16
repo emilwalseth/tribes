@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Characters;
 using Data.Resources;
 using Interfaces;
 using Managers;
@@ -10,31 +11,25 @@ namespace Tiles
     public class ResourceTileScript : MonoBehaviour, ITileInterface
     {
 
-        
+
+        [SerializeField] private ToolType _toolType;
         [SerializeField] private List<ResourceKeyValuePair> _resources;
+        
+        public ToolType ToolType => _toolType;
         public List<ResourceKeyValuePair> Resources => _resources;
 
-
-        public void Harvest()
+        private void Harvest(Character character)
         {
             if (_resources.Count == 0) return;
-            if (TryGetComponent(out TileScript tile))
-            {
-                tile.PlayInteractAnimation();
-            }
-            
+   
+            character.SetTool(ToolType);
             StatsManager.Instance.AddResources(Resources);
-            InteractionManager.Instance.SpawnIndicator(transform.position, Resources.First().Resource);
+            InteractionManager.Instance.SpawnIndicator(transform.position, Resources.First().Resource.ResourceIcon);
         }
 
-        public void OnInteract()
+        public void OnInteract(Character character)
         {
-            Harvest();
-        }
-
-        public int GetSelectionRadius()
-        {
-            return 0;
+            Harvest(character);
         }
     }
 }

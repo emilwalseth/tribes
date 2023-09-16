@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: MinionData
   m_EditorClassIdentifier: 
   _characterMesh: {fileID: 7615726817301172277, guid: d9449d1cba806264197a5fc491942b7d, type: 3}
-  _woodChopSpeed: 2
+  _harvestSpeed: 1.5
   _walkRadius: 1

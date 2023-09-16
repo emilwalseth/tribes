@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: HeroData
   m_EditorClassIdentifier: 
   _characterMesh: {fileID: 8400425641593728444, guid: c7939ffbde0f0184d9257112e842493a, type: 3}
-  _woodChopSpeed: 1.5
-  _walkRadius: 2
+  _harvestSpeed: 1
+  _walkRadius: 10

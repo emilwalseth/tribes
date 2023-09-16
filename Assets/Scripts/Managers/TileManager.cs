@@ -3,6 +3,7 @@ using Data.Buildings;
 using Data.GeneralTiles;
 using Tiles;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Managers
 {
@@ -16,28 +17,31 @@ namespace Managers
         [SerializeField] private TileScript _baseTile;
         [Space(10)]
         [Header("Ground Meshes")]
+        [SerializeField] private Mesh _unexploredGround;
         [SerializeField] private Mesh _grassGround;
         [SerializeField] private Mesh _townGround;
         [SerializeField] private Mesh _waterGround;
-        [Space(10)]
-        [Header("Tile Data")]
+        [SerializeField] private Mesh _stoneGround;
+
+        [Space(10)] [Header("Tile Data")] 
         [SerializeField] private TileData _grassTileData;
         [SerializeField] private TileData _waterTileData;
-        [SerializeField] private TileData _treesTileData;
+        [SerializeField] private TileData _forestTileData;
+        [SerializeField] private TileData _mountainTileData;
         [SerializeField] private TileData _campsiteTileData;
+        
+        
+        public TileData GrassTileData => _grassTileData;
+        public TileData WaterTileData => _waterTileData;
+        public TileData ForestTileData => _forestTileData;
+        public TileData MountainTileData => _mountainTileData;
+        public TileData CampsiteTileData => _campsiteTileData;
 
 
-        public TileScript CreateTile(Vector3 position, TileData tileData)
+        public TileScript CreateTile(Vector3 position)
         {
             TileScript tile = Instantiate(_baseTile, position, Quaternion.identity);
-            tile.SetTileData(tileData);
             return tile;
-        }
-        
-        public void SetTileData(TileScript tile, TileData tileData)
-        {
-            if (!(tile && tileData)) return;
-            tile.SetTileData(tileData);
         }
         
         public void SetTileGround(TileScript tile)
@@ -59,54 +63,43 @@ namespace Managers
                 case GroundType.Water:
                     tile.SetGround(_waterGround);
                     break;
+                case GroundType.Stone:
+                    tile.SetGround(_stoneGround);
+                    break;
                 default:
                     tile.SetGround(_grassGround);
                     break;
             }
             
-            SelectionManager.Instance.DeselectAll();
         }
         
         public void PlaceBuilding(TileScript tile, BuildingTileData buildingData)
         {
             if (!(tile && buildingData)) return;
-            if (buildingData.BuildingLevels.Count == 0) return;
             
-            TileData tileData = buildingData.BuildingLevels[0].TileData;
+            TileData tileData = buildingData.BuildingData.TileData;
             if (!tileData) return;
             
             tile.SetTileData(tileData);
-            SelectionManager.Instance.DeselectAll();
+        }
+        
+        public Mesh GetUnexploredMesh()
+        {
+            return _unexploredGround;
         }
         
         public void CreateTown(TileScript tile)
         {
-            SetTileData(tile, _campsiteTileData);
-            SelectionManager.Instance.DeselectAll();
-        }
-        
-        public TileScript CreateGrassTile(Vector3 position)
-        {
-            return CreateTile(position, _grassTileData);
-        }
-        public TileScript CreateWaterTile(Vector3 position)
-        {
-            return CreateTile(position, _waterTileData);
-        }
-        public TileScript CreateTreesTile(Vector3 position)
-        {
-            return CreateTile(position, _treesTileData);
+            tile.SetTileData(CampsiteTileData);
         }
         
         public void SetGrass(TileScript tile)
         {
-            SetTileData(tile, _grassTileData);
-            SelectionManager.Instance.DeselectAll();
+            tile.SetTileData(GrassTileData);
         }
         public void SetForest(TileScript tile)
         {
-            SetTileData(tile, _treesTileData);
-            SelectionManager.Instance.DeselectAll();
+            tile.SetTileData(ForestTileData);
         }
         
     }

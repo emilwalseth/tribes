@@ -45,7 +45,12 @@ namespace Player
             
             // Set spawn position to the spawned hero
             transform.position = MapManager.Instance.GetMapCenter();
-            EventManager.Instance.onHeroSpawned += hero => transform.position = hero.transform.position;;
+            AnimationManager.Instance.SetFadeValue(1);
+            EventManager.Instance.onHeroSpawned += hero =>
+            {
+                AnimationManager.Instance.DoFadeCamera(0.4f, 1, 0);
+                AnimationManager.Instance.DoMoveToAnimation(gameObject, hero.transform.position, 1f);
+            };
 
             _targetZoom = _camera.orthographicSize;
         

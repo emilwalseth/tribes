@@ -1,18 +1,21 @@
 using System;
 using System.Collections.Generic;
+using AI;
 using Characters;
 using Data.Actions;
 using Data.GeneralTiles;
 using Interfaces;
 using Managers;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Tiles
 {
     public class TileScript : NavigationNode, IInteractable
     {
         [SerializeField] private TileData _tileData;
-        [SerializeField] private MeshFilter _groundLayer;
+        [SerializeField] private MeshFilter _groundMeshFilter;
+        [SerializeField] private MeshRenderer _groundRenderer;
         [SerializeField] private GameObject _secondLayer;
   
 
@@ -22,7 +25,11 @@ namespace Tiles
         public TileData TileData => _tileData;
         public GameObject CurrentTile => _currentTile;
         public TileScript TownTile => _townTile;
+        public bool IsExplored { get; set; } = true;
+
         public Unit Occupant { get; private set; }
+
+        public UnityAction<Unit> onOccupantEntered;
 
         public void OnClicked()
         {
@@ -31,29 +38,32 @@ namespace Tiles
             Character selectedCharacter = SelectionManager.Instance.SelectedCharacter;
             Unit selectedUnit = SelectionManager.Instance.SelectedUnit;
             
-            Unit chosenUnit = selectedUnit;
+            
+            Unit chosenUnit =  selectedUnit;
             
             // If there is only one character selected, split it from its current unit, and give it a new unit
             if (!chosenUnit && selectedCharacter)
             {
-                if (selectedCharacter.GetCurrenTile() != this)
+                if (SelectionManager.Instance.IsTileSelected(this))
                 {
-                    if (SelectionManager.Instance.IsTileSelected(this))
-                    {
+                    if (!Occupant || Occupant.TeamIndex == 0)
                         selectedCharacter.CurrentUnit.SplitFromUnit(selectedCharacter);
-                        chosenUnit = selectedCharacter.CurrentUnit;
-                    }
+                    
+                    chosenUnit = selectedCharacter.CurrentUnit;
                 }
             }
+
             // If there is a unit selected, move it to this tile
             if (chosenUnit)
             {
-                TileScript currentTile = chosenUnit.GetCurrentTile();
-                if (currentTile != this)
+                chosenUnit.AI.SetState(AIState.None);
+                
+                if (SelectionManager.Instance.IsTileSelected(this))
                 {
-                    if (SelectionManager.Instance.IsTileSelected(this))
+                    bool success = chosenUnit.NavigateToTile(this);
+                    print(success);
+                    if (success)
                     {
-                        chosenUnit.NavigateToTile(this);
                         UIManager.instance.CloseMenu();
                         return;
                     }
@@ -64,7 +74,7 @@ namespace Tiles
             SelectionManager.Instance.DeselectAll();
             SelectionManager.Instance.SelectTilesInRadius(GetSelectionRadius(), this);
 
-            if (TownTile && TownTile != this && TileData.TileType != TileType.Building && TileData.GroundType != GroundType.Water)
+            if (TownTile && TownTile != this && TileData.TileType != TileType.Building)
             {
                 UIManager.instance.OpenBuildMenu(this);
             }
@@ -74,11 +84,11 @@ namespace Tiles
             }
         }
         
-        public void Interact()
+        public void Interact(Character character)
         {
             if (!_currentTile || !_currentTile.TryGetComponent(out ITileInterface tileInterface)) return;
             
-            tileInterface.OnInteract();
+            tileInterface.OnInteract(character);
             PlayInteractAnimation();
         }
 
@@ -91,7 +101,7 @@ namespace Tiles
         {
             
         }
-
+        
         public void SetTown(TileScript townTile)
         {
             _townTile = townTile;
@@ -101,6 +111,9 @@ namespace Tiles
         public void SetTileData(TileData tileData)
         {
             _tileData = tileData;
+            
+            if (!IsExplored) return;
+            
             UpdateTile();
             RunActions(TileData.OnTilePlaced);
         }
@@ -111,6 +124,23 @@ namespace Tiles
             foreach (ScriptableAction action in actions)
             {
                 action.Execute(gameObject);
+            }
+        }
+
+        public void SetExplored(bool newExplored)
+        {
+            if (newExplored == IsExplored) return;
+            
+            IsExplored = newExplored;
+
+            if (IsExplored)
+            {
+               SetTileData(TileData);
+            }
+            else
+            {
+                ClearTile();
+                _groundMeshFilter.mesh = TileManager.Instance.GetUnexploredMesh();
             }
         }
 
@@ -133,7 +163,7 @@ namespace Tiles
 
         public void SetGround(Mesh groundType)
         {
-            _groundLayer.mesh = groundType;
+            _groundMeshFilter.mesh = groundType;
         }
 
         public void ClearTile()
@@ -146,6 +176,10 @@ namespace Tiles
         
         public void SetOccupant(Unit occupant)
         {
+            if (occupant)
+            {
+                onOccupantEntered?.Invoke(occupant);
+            }
             Occupant = occupant;
         }
         public void ClearOccupant()

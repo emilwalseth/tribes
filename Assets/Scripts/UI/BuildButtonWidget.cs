@@ -5,6 +5,7 @@ using Data.Buildings;
 using Data.Resources;
 using Managers;
 using Tiles;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,6 +15,7 @@ namespace UI
     {
     
         [SerializeField] private Button _buildButton;
+        [SerializeField] private TMP_Text _buildButtonText;
         [SerializeField] private BuildingTileData _buildingData;
         [SerializeField] private RequirementWidget _requirementWidgetPrefab;
         [SerializeField] private VerticalLayoutGroup _requirementGroup;
@@ -21,31 +23,51 @@ namespace UI
         
         private readonly List<RequirementWidget> _requirementWidgets = new List<RequirementWidget>();
         
+                
+        private void OnEnable()
+        {
+            UpdateRequirements();
+            StatsManager.Instance.onStatsChanged += UpdateEnabled;
+            _buildButton.onClick.AddListener(Build);
+            _buildButtonText.text = "Build " + _buildingData.BuildingData.TileData.TileName;
+            UpdateEnabled();
+        }
+
         
         private void UpdateEnabled()
         {
             if (!_buildingData) return;
-            List<ResourceKeyValuePair> requirements = _buildingData.BuildingLevels[0].BuildRequirements.Resources;
-
-            bool canBuild = true;
+            List<ResourceKeyValuePair> requirements = _buildingData.BuildingData.BuildRequirements.Resources;
+            
+            
+            //TileScript selectedTile = SelectionManager.Instance.GetSelectedTile();
+            //if (selectedTile)
+            //{
+            //    if (selectedTile.TileData.GroundType != _buildingData.BuildingData.PlacedOn)
+            //    {
+            //        _buildButton.interactable = false;
+            //        return;
+            //    }
+            //    
+            //}
             
             foreach (ResourceKeyValuePair requirement in requirements)
             {
                 if (StatsManager.Instance.HasResource(requirement.Resource, requirement.Amount)) continue;
                 
-                canBuild = false;
-                break;
+                _buildButton.interactable = false;
+                return;
             }
-            
-            _buildButton.interactable = canBuild;
-            
+
+            _buildButton.interactable = true;
+
         }
         
         private void UpdateRequirements()
         {
-            if (!_buildingData || _buildingData.BuildingLevels.Count == 0) return;
-
-            Requirements requirements = _buildingData.BuildingLevels[0].BuildRequirements;
+            if (!_buildingData || !_buildingData.BuildingData.TileData) return;
+            
+            Requirements requirements = _buildingData.BuildingData.BuildRequirements;
 
             ClearRequirementWidgets();
 
@@ -61,20 +83,12 @@ namespace UI
 
         private void ClearRequirementWidgets()
         {
+            
             foreach (RequirementWidget requirement in _requirementWidgets.Where(requirement => requirement))
             {
                 Destroy(requirement.gameObject);
             }
             _requirementWidgets.Clear();
-        }
-        
-        
-        private void OnEnable()
-        {
-            UpdateRequirements();
-            StatsManager.Instance.onStatsChanged += UpdateEnabled;
-            _buildButton.onClick.AddListener(Build);
-            UpdateEnabled();
         }
         
         private void OnDisable()
@@ -96,7 +110,7 @@ namespace UI
         {
             if (!_buildingData) return;
             
-            Requirements requirements = _buildingData.BuildingLevels[0].BuildRequirements;
+            Requirements requirements = _buildingData.BuildingData.BuildRequirements;
 
             foreach (ResourceKeyValuePair requirement in requirements.Resources)
             {

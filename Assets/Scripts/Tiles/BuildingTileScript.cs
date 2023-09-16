@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Characters;
 using Data.Buildings;
 using Interfaces;
 using Managers;
@@ -15,18 +16,8 @@ namespace Tiles
         public int Level => _level;
         public BuildingTileData BuildingTileData => _buildingTileData;
         
-
-        public void SetBuildingLevel(int level)
-        {
-            _level = level;
-        }
-
-        public BuildingLevelData GetCurrentLevel()
-        {
-            return _buildingTileData.BuildingLevels[_level]; 
-        }
-
-        public void OnInteract(){}
+        
+        public void OnInteract(Character character){}
         
     }
 }

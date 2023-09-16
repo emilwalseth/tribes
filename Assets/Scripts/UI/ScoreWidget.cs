@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Data.Resources;
 using Managers;
 using TMPro;
@@ -23,14 +24,18 @@ namespace UI
         
         private void OnDisable()
         {
+            if (!StatsManager.Instance) return;
             StatsManager.Instance.onStatsChanged -= SetScore;
         }
 
         private void SetScore()
         {
-            int newCount = StatsManager.Instance.Resources[_resourceData];
+            int count = 0;
+            if (StatsManager.Instance.Resources.TryGetValue(_resourceData, out int amount))
+                count = amount;
 
-            string score = newCount.ToString();
+            
+            string score = count.ToString();
             
             if (score == _scoreText.text) return;
             

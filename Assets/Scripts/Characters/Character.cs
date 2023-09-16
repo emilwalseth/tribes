@@ -19,20 +19,63 @@ namespace Characters
         [SerializeField] private CharacterTool _tool;
         [SerializeField] private MeshFilter _characterMeshFilter;
         
-        private Animator _animator;
+        [SerializeField] private List<RectTransform> _enemyMenuOptions = new();
+        [SerializeField] private List<RectTransform> _teamMenuOptions = new();
 
+        
+        
+        private Animator _animator;
         public Unit CurrentUnit { get; set; }
         public CharacterData CharacterData => _characterData;
-        
+        public List<RectTransform> EnemyMenuOptions => _enemyMenuOptions;
+        public List<RectTransform> TeamMenuOptions => _teamMenuOptions;
         
         // Animation values
         private static readonly int Idle = Animator.StringToHash("Idle");
         private static readonly int Walking = Animator.StringToHash("Walking");
         private static readonly int Hit = Animator.StringToHash("Hit");
+        private static readonly int Attack = Animator.StringToHash("Attack");
+        
+        private float _timeLastAttack;
+        private Unit _targetUnit;
 
         private void Awake()
         {
             _animator = GetComponent<Animator>();
+        }
+        public void SetAttackTarget(Unit targetUnit)
+        {
+            
+            if (targetUnit)
+            {
+                InvokeRepeating(nameof(TryAttacking), 0, 0.1f);
+                _targetUnit = targetUnit;
+            }
+            else
+            {
+                CancelInvoke(nameof(TryAttacking));
+                _targetUnit = null;
+                SetTool(ToolType.None);
+            }
+        }
+        
+        private void TryAttacking()
+        {
+            if (!_targetUnit) return;
+
+            float radius = (_characterData.AttackRadius + 0.05f) * MapManager.Instance.TileSize;
+            
+            if (Vector3.Distance(_targetUnit.transform.position, transform.position) > radius) return;
+            
+            if (_timeLastAttack + _characterData.AttackSpeed >= Time.realtimeSinceStartup) return;
+            _timeLastAttack = Time.realtimeSinceStartup;
+            
+            // TODO: Choose character
+            Character targetCharacter = _targetUnit.CharactersInUnit[0];
+            
+            PlayAttackAnim();
+            targetCharacter.Damage(0);
+            
         }
 
         public void SetIsMoving(bool newIsMoving)
@@ -49,12 +92,13 @@ namespace Characters
                 _animator.CrossFade(Idle, 0.1f, 0);
 
             }
+            
         }
 
         public void OnClicked()
         {
             SelectionManager.Instance.SelectCharacter(this);
-            AnimationManager.Instance.DoBounceAnim(gameObject, 0.25f);
+            AnimationManager.Instance.DoBounceAnim(gameObject);
         }
         
         public TileScript GetCurrenTile()
@@ -121,11 +165,24 @@ namespace Characters
         {
             _tool.SetTool(toolType);
         }
-        
-        public void PlayHitAnim(ToolType toolType)
+        public void PlayAttackAnim()
+        { 
+            SetTool(ToolType.Sword);
+            _animator.Play(Attack, 1,0f);
+            _animator.Play(Attack, 2,0f);
+        }
+
+        public void Damage(int amount)
         {
-            _tool.SetTool(toolType);
-            _animator.Play(Hit, 0,0f);
+            Sprite sprite = Resources.Load<Sprite>("Textures/AlertMarker");
+            print(sprite);
+            InteractionManager.Instance.SpawnIndicator(transform.position + new Vector3(0,0,0), sprite);
+            PlayHitAnim();
+        }
+        
+        public void PlayHitAnim()
+        {
+            _animator.Play(Hit, 1,0f);
         }
 
 

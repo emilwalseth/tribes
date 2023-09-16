@@ -12,6 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 099440aae865069438e1d5ad3b136290, type: 3}
   m_Name: TownData
   m_EditorClassIdentifier: 
-  _buildingLevels:
-  - _tileData: {fileID: 11400000, guid: b7530b54b59b6264b9a67c7ba7759464, type: 2}
-    _levelBuildCost: 0
+  _buildingData:
+    _tileData: {fileID: 11400000, guid: b7530b54b59b6264b9a67c7ba7759464, type: 2}
+    _placedOn: 0
+    _buildRequirements:
+      _resources: []

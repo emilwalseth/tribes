@@ -20,8 +20,12 @@ namespace Managers
 
         public Unit SplitUnit(Unit splitFrom)
         {
+            TileScript startTile = 
+                splitFrom.CurrentNavigationPath.Count == 0 ? 
+                    splitFrom.GetCurrentTile() : 
+                    MapManager.Instance.GetTileAtPosition(splitFrom.CurrentNavigationPath[0]);
             
-            Unit spawnedUnit = SpawnUnitInternal(splitFrom.transform.position, splitFrom.GetCurrentTile());
+            Unit spawnedUnit = SpawnUnitInternal(splitFrom.transform.position, startTile);
             
             spawnedUnit.RecentSplitUnit = splitFrom;
             splitFrom.RecentSplitUnit = spawnedUnit;
@@ -37,31 +41,37 @@ namespace Managers
             
         }
 
-        public Character SpawnHero(TileScript spawnTile)
+        public Character SpawnHero(TileScript spawnTile, int teamIndex)
         {
-            return SpawnCharacter(spawnTile, _heroData);
+            return SpawnCharacter(spawnTile, _heroData, teamIndex);
         }
         
-        public Character SpawnMinion(TileScript spawnTile)
+        public Character SpawnMinion(TileScript spawnTile, int teamIndex)
         {
-            return SpawnCharacter(spawnTile, _minionData);
+            return SpawnCharacter(spawnTile, _minionData, teamIndex);
         }
 
-        private Character SpawnCharacter(TileScript spawnTile, CharacterData characterData)
+        private Character SpawnCharacter(TileScript spawnTile, CharacterData characterData, int teamIndex)
         {
-            Unit unit = SpawnUnitInternal(spawnTile.transform.position, spawnTile);
+            Vector3 spawnPos = spawnTile.transform.position;
+            Unit unit = SpawnUnitInternal(spawnPos, spawnTile);
 
             Character character = Instantiate(_characterPrefab, spawnTile.transform);
-            character.transform.localRotation = Quaternion.Euler(0,-135,0);
+            character.transform.localRotation = Quaternion.Euler(0, -135, 0);
+
             character.SetCharacterData(characterData);
-            unit.AddCharacter(character);
             character.CurrentUnit = unit;
             character.transform.parent = unit.transform;
+
+            unit.TeamIndex = teamIndex;
+            unit.AddCharacter(character);
             unit.SetNewOccupant(spawnTile);
+            unit.SetCurrentTile(spawnPos);
+
             AnimationManager.Instance.DoBounceAnim(character.gameObject);
 
             return character;
         }
-    
+
     }
 }

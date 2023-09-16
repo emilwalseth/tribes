@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5070f371427266143af5c2daa6190674, type: 3}
   m_Name: CampsiteTile
   m_EditorClassIdentifier: 
+  _tileName: Campsite
   _tileType: 2
   _groundType: 0
   _selectionRadius: 1

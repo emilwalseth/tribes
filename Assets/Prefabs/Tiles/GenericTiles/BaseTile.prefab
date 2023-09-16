@@ -72,7 +72,8 @@ MonoBehaviour:
   _nodeWeight: 0
   _isWalkable: 1
   _tileData: {fileID: 11400000, guid: 3d8d7c38963e07a48aaf6a73b674c463, type: 2}
-  _groundLayer: {fileID: 2689706384979444864}
+  _groundMeshFilter: {fileID: 2689706384979444864}
+  _groundRenderer: {fileID: 1912041040245182899}
   _secondLayer: {fileID: 5927007358776946369}
 --- !u!1 &5335680376226214311
 GameObject:

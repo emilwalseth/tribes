@@ -36,8 +36,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 99.80652}
-  m_SizeDelta: {x: 321.1484, y: 102.027}
+  m_AnchoredPosition: {x: 34.71631, y: 47.3284}
+  m_SizeDelta: {x: 390.581, y: 206.9833}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &8620436466691420174
 MonoBehaviour:
@@ -52,6 +52,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _buildButton: {fileID: 4596574996408739294}
+  _buildButtonText: {fileID: 5659820176003147196}
   _buildingData: {fileID: 11400000, guid: 9307a2eb704d82341939c78d3b00d2d8, type: 2}
   _requirementWidgetPrefab: {fileID: 4680146692966994244, guid: 3d5e375d07e65af4781e52ee85bfb60f, type: 3}
   _requirementGroup: {fileID: 5400181788044112651}
@@ -72,7 +73,7 @@ MonoBehaviour:
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 0
+  m_ChildAlignment: 4
   m_Spacing: 0
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0

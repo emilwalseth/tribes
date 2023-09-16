@@ -20,6 +20,8 @@ namespace Data.Resources
     public enum ResourceType
     {
         Wood,
+        Stone,
+        Metal
     }
     
     [CreateAssetMenu(fileName = "ResourceData", menuName = "ScriptableObjects/ResourceData", order = 1)]

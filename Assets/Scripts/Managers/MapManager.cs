@@ -3,6 +3,7 @@ using System.Linq;
 using Data.GeneralTiles;
 using Tiles;
 using UnityEngine;
+using UnityEngine.Serialization;
 using World;
 using Random = UnityEngine.Random;
 
@@ -15,6 +16,7 @@ namespace Managers
 
         [SerializeField] private Vector2Int _mapSize = new Vector2Int(10, 15);
         [SerializeField] private int _tileSize = 2;
+        [SerializeField] private bool _startExplored = false;
         [SerializeField] private GameObject _testObj;
         
     
@@ -22,7 +24,8 @@ namespace Managers
         [SerializeField] private int _noiseSeed = 1276473;
         [SerializeField] private float _noiseFrequency = 100f;
         [SerializeField] private float _waterThreshold = 0.4f;
-        [SerializeField] private float _treesThreshold = 0.7f;
+        [SerializeField] private float _forestThreshold = 0.7f;
+        [SerializeField] private float _mountainThreshold = 0.85f;
             
         
         public int TileSize => _tileSize;
@@ -88,16 +91,22 @@ namespace Managers
                     
                     Vector3 tilePosition = position + transform.position;
 
-                    TileScript newTile;
+                    TileScript newTile = TileManager.Instance.CreateTile(tilePosition);
+                    newTile.SetExplored(_startExplored);
+
+                    TileData tileData;
                     
                     // If the noiseValue is above the treesThreshold, make trees tile
-                    if (noiseValue > _treesThreshold)
-                        newTile = TileManager.Instance.CreateTreesTile(tilePosition);
+                    if (noiseValue > _mountainThreshold)
+                        tileData = TileManager.Instance.MountainTileData;
+                    else if (noiseValue > _forestThreshold)
+                        tileData = TileManager.Instance.ForestTileData;
                     else if (noiseValue < _waterThreshold)
-                        newTile = TileManager.Instance.CreateWaterTile(tilePosition);
+                        tileData = TileManager.Instance.WaterTileData;
                     else
-                        newTile = TileManager.Instance.CreateGrassTile(tilePosition);
+                        tileData = TileManager.Instance.GrassTileData;
                     
+                    newTile.SetTileData(tileData);
                     newTile.transform.SetParent(transform);
                     
                     // Add tile to dictionary over all tiles
@@ -118,22 +127,10 @@ namespace Managers
             return new Vector2Int(x, z);
         }
 
-        public TileScript GetRandomGrassTile()
+        public TileScript GetRandomTile(GroundType groundType)
         {
-
-            List<Vector3> openTiles = _mapTiles.Keys.ToList();
-
-            while (openTiles.Count > 0)
-            {
-                Vector3 pos = openTiles[Random.Range(0, openTiles.Count)];
-                TileScript tile = _mapTiles[pos].GetComponent<TileScript>();
-                openTiles.Remove(pos);
-                if (!tile) continue;
-                
-                if (tile.TileData.TileType == TileType.Generic && tile.IsWalkable) return tile;
-            }
-
-            return null;
+            List<TileScript> mapTiles = _mapTiles.Values.Where(tile => tile.TileData.GroundType == groundType).ToList();
+            return mapTiles.Count > 0 ? mapTiles[Random.Range(0, mapTiles.Count)] : null;
         }
 
         public List<TileScript> GetTileNeighbors(GameObject tile, bool includeNull = false)

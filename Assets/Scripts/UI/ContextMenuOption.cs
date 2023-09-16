@@ -15,9 +15,23 @@ namespace UI
             TileManager.Instance.CreateTown(tile);
         }
 
-        public void StartWoodChopping()
+        public void StartHarvesting()
         {
-            InteractionManager.Instance.StartChoppingWood();
+            InteractionManager.Instance.StartHarvesting();
+        }
+
+        public void Attack()
+        {
+
+            GameObject enemy = SelectionManager.Instance.MarkedEnemy;
+            Unit selectedUnit = SelectionManager.Instance.GetSelectedUnit();
+            if (!selectedUnit) return;
+
+            if (!enemy.TryGetComponent(out Character character)) return;
+            selectedUnit.Attack(character.CurrentUnit);
+            SelectionManager.Instance.DeselectEnemy();
+            UIManager.instance.CloseMenu();
+
         }
 
     }
