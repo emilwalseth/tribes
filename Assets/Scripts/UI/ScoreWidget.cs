@@ -18,20 +18,21 @@ namespace UI
         private void Start()
         {
             _icon.sprite = _resourceData.ResourceIcon;
-            StatsManager.Instance.onStatsChanged += SetScore;
+            EventManager.Instance.onHeroSpawned += character => TeamManager.Instance.GetTeam(0).onStatsChanged += SetScore;
+            
         }
         
         
         private void OnDisable()
         {
-            if (!StatsManager.Instance) return;
-            StatsManager.Instance.onStatsChanged -= SetScore;
+            if (!TeamManager.Instance.IsValidTeam(0)) return;
+            TeamManager.Instance.GetTeam(0).onStatsChanged -= SetScore;
         }
 
         private void SetScore()
         {
             int count = 0;
-            if (StatsManager.Instance.Resources.TryGetValue(_resourceData, out int amount))
+            if (TeamManager.Instance.GetTeam(0).Resources.TryGetValue(_resourceData.ResourceType, out int amount))
                 count = amount;
 
             

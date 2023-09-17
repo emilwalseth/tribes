@@ -13,12 +13,11 @@ using Random = UnityEngine.Random;
 
 namespace Characters
 {
-    public enum UnitState
+
+    public struct UnitStats
     {
-        Idle,
-        Moving,
-        Working,
-        
+        public int WalkRadius { get; set; }
+        public float WalkSpeed { get; set; }
     }
     
     public class Unit : MonoBehaviour
@@ -27,8 +26,9 @@ namespace Characters
         [SerializeField] private CharacterMarker _unitMarker;
 
         private Vector3 _currentTilePosition;
+        private UnitStats _unitStats = new UnitStats();
         
-        public UnitState State { get; set; }
+        public UnitStats Stats => _unitStats;
         public int TeamIndex { get; set; } = 0;
         public PathRenderer CurrentPathRenderer { get; set; }
         public List<Vector3> CurrentNavigationPath { get; private set; }  = new ();
@@ -38,9 +38,8 @@ namespace Characters
 
         public Unit RecentSplitUnit { get; set; }
         public AIBrain AI { get; set; }
-        
-        private const float MovementSpeed = 1f;
 
+        public UnityAction onReachedDestination;
 
         private void Start()
         {
@@ -61,9 +60,23 @@ namespace Characters
                 character.SetAttackTarget(targetUnit);
             }
         }
+
+        private void UpdateStats()
+        {
+
+            foreach (Character character in CharactersInUnit)
+            {
+                _unitStats.WalkSpeed = Mathf.Max(Stats.WalkSpeed, character.CharacterData.WalkSpeed);
+                _unitStats.WalkRadius = Mathf.Max(Stats.WalkRadius, character.CharacterData.WalkRadius);
+
+            }
+            
+        }
         
         public bool NavigateToTile(TileScript targetTile)
         {
+            
+            onReachedDestination = null;
             
             if (!targetTile) 
                 return false;
@@ -151,10 +164,13 @@ namespace Characters
             if (newNavigationPath == null) return false;
 
             List<Vector3> newPath = new List<Vector3>();
+
+            List<TileScript> radius = SelectionManager.Instance.GetRadius(Stats.WalkRadius, GetCurrentTile());
+            
             foreach (NavigationNode node in newNavigationPath)
             {
                 if (node.TryGetComponent(out TileScript tileScript))
-                    if (!SelectionManager.Instance.IsTileSelected(tileScript))
+                    if (!radius.Contains(tileScript))
                     {
                         newPath.Clear();
                         break;
@@ -165,9 +181,9 @@ namespace Characters
             if (newPath.Count == 0) return false;
             
             CurrentNavigationPath = newPath;
-            State = UnitState.Moving;
-            UpdateCharactersMoving();
-            NavigationManager.Instance.MakePathRenderer(this);
+            UpdateCharactersMoving(true);
+            if (TeamIndex == 0)
+                NavigationManager.Instance.MakePathRenderer(this);
             return true;
         }
         
@@ -176,9 +192,9 @@ namespace Characters
         {
             print("Arrived!");
             GetCurrentTile().onOccupantEntered -= OnOccupantUpdated;
-            State = UnitState.Idle;
-            UpdateCharactersMoving();
+            UpdateCharactersMoving(false);
             SetNewOccupant(GetCurrentTile());
+            onReachedDestination?.Invoke();
         }
 
 
@@ -205,8 +221,10 @@ namespace Characters
             
             if (CurrentPathRenderer)
                 Destroy(CurrentPathRenderer.gameObject);
-            
+
+            TeamManager.Instance.GetTeam(TeamIndex).Units.Remove(this);
             Destroy(gameObject);
+            
         }
 
         public void CombineWithUnit(Unit unit)
@@ -326,25 +344,32 @@ namespace Characters
                 Vector3 position = new Vector3(newPos.x, 0, newPos.y) * MapManager.Instance.TileSize;
                 AnimationManager.Instance.DoMoveToAnimation(character.gameObject, position, 0.4f, false);
             }
-            UpdateCharactersMoving();
+            UpdateCharactersMoving(_charactersInUnit[0].State == CharacterState.Moving);
+            UpdateStats();
         }
-
-        public int GetUnitWalkRadius()
-        {
-            return CharactersInUnit.Aggregate(0, (current, character) => Mathf.Max(current, character.CharacterData.WalkRadius));
-        }
-
         public void SetCurrentTile(Vector3 newTilePos)
         {
             _currentTilePosition = newTilePos;
+            TileScript tile = GetCurrentTile();
+            
+            gameObject.SetActive(tile.IsExplored);
             ExploreTiles();
         }
 
         private void ExploreTiles()
         {
-            List<TileScript> tiles = SelectionManager.Instance.GetRadius(GetUnitWalkRadius(), GetCurrentTile()).Where(tile => !tile.IsExplored).ToList();
-            tiles.ForEach(tile => tile.SetExplored(true));
+            List<TileScript> tiles = SelectionManager.Instance.GetRadius(Stats.WalkRadius, GetCurrentTile());
             
+            if (TeamIndex == 0)
+            {
+                tiles.ForEach(tile => tile.SetExplored(true));
+            }
+   
+            foreach (TileScript tile in tiles)
+            {
+                if (!tile || !tile.CurrentTile) continue;
+                TeamManager.Instance.GetTeam(TeamIndex).AddSeenTile(tile);
+            }
         }
         
         
@@ -356,6 +381,7 @@ namespace Characters
         public void AddCharacter(Character character)
         {
             _charactersInUnit.Add(character);
+            UpdateStats();
         }
 
         private void Update()
@@ -376,13 +402,13 @@ namespace Characters
         }
 
 
-        private void UpdateCharactersMoving()
+        private void UpdateCharactersMoving(bool newMoving)
         {
             if (CharactersInUnit.Count == 0) return;
             
             CharactersInUnit.ForEach(character =>
             {
-                character.SetIsMoving(State == UnitState.Moving);
+                character.SetState(newMoving ? CharacterState.Moving : CharacterState.Idle);
             });
 
         }
@@ -417,6 +443,14 @@ namespace Characters
             }
         }
 
+        public void SetState(CharacterState newState)
+        {
+            foreach (Character character in _charactersInUnit)
+            {
+                character.SetState(newState);
+            }
+        }
+
         private void MoveAlongPath()
         {
             if (CurrentNavigationPath.Count == 0) return;
@@ -425,7 +459,7 @@ namespace Characters
             Vector3 currentTarget = CurrentNavigationPath[0];
 
             float distance = Vector3.Distance(currentPos, currentTarget);
-            float moveAmount = MovementSpeed * Time.deltaTime;
+            float moveAmount = Stats.WalkSpeed * Time.deltaTime;
             RotateTowardsPosition(currentTarget);
 
             if (distance < moveAmount)
@@ -441,8 +475,11 @@ namespace Characters
                 
                 if (CurrentNavigationPath.Count == 0)
                     OnArrivedTarget();
+
+                if (CurrentPathRenderer)
+                    CurrentPathRenderer.UpdatePath();
                 
-                CurrentPathRenderer.UpdatePath();
+
                 SelectionManager.Instance.UpdateCharacterSelection();
             }
 

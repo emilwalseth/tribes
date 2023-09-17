@@ -6,6 +6,7 @@ using Data.Actions;
 using Data.GeneralTiles;
 using Interfaces;
 using Managers;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -14,22 +15,33 @@ namespace Tiles
     public class TileScript : NavigationNode, IInteractable
     {
         [SerializeField] private TileData _tileData;
+        [SerializeField] private GameObject _fogTile;
+        [SerializeField] private GameObject _mainTile;
         [SerializeField] private MeshFilter _groundMeshFilter;
-        [SerializeField] private MeshRenderer _groundRenderer;
         [SerializeField] private GameObject _secondLayer;
+        [SerializeField] private TMP_Text _debugText;
+        [SerializeField] private bool _debug = false;
   
 
         private GameObject _currentTile;
         private TileScript _townTile;
+        private int _claimedByTeam = -1;
 
         public TileData TileData => _tileData;
         public GameObject CurrentTile => _currentTile;
         public TileScript TownTile => _townTile;
+        public int ClaimedByTeam => _claimedByTeam;
         public bool IsExplored { get; set; } = true;
 
         public Unit Occupant { get; private set; }
 
         public UnityAction<Unit> onOccupantEntered;
+
+
+        private void Start()
+        {
+            SetDebugText(0.ToString());
+        }
 
         public void OnClicked()
         {
@@ -83,6 +95,18 @@ namespace Tiles
                 UIManager.instance.CloseMenu();
             }
         }
+
+        public void SetDebugText(string text)
+        {
+            if (!_debug)
+            {
+                _debugText.gameObject.SetActive(false);
+                return;
+            }
+            
+            if(!_debugText) return;
+            _debugText.text = text;
+        }
         
         public void Interact(Character character)
         {
@@ -108,11 +132,11 @@ namespace Tiles
             TileManager.Instance.SetTileGround(this);
         }
         
-        public void SetTileData(TileData tileData)
+        public void SetTileData(TileData tileData, int teamIndex = -1)
         {
             _tileData = tileData;
-            
-            if (!IsExplored) return;
+            if (teamIndex != -1)
+                _claimedByTeam = teamIndex;
             
             UpdateTile();
             RunActions(TileData.OnTilePlaced);
@@ -127,21 +151,17 @@ namespace Tiles
             }
         }
 
-        public void SetExplored(bool newExplored)
+        public void SetExplored(bool newExplored, bool force = false)
         {
-            if (newExplored == IsExplored) return;
-            
+            if (newExplored == IsExplored && !force) return;
             IsExplored = newExplored;
+            _fogTile.SetActive(!IsExplored);
+            _mainTile.SetActive(IsExplored);
+            if (Occupant)
+            {
+                Occupant.gameObject.SetActive(newExplored);
+            }
 
-            if (IsExplored)
-            {
-               SetTileData(TileData);
-            }
-            else
-            {
-                ClearTile();
-                _groundMeshFilter.mesh = TileManager.Instance.GetUnexploredMesh();
-            }
         }
 
         private void UpdateTile()
@@ -154,8 +174,14 @@ namespace Tiles
             {
                 _currentTile = Instantiate(_tileData.Tile, transform);
                 _currentTile.transform.parent = _secondLayer.transform;
+                if (_currentTile && _currentTile.TryGetComponent(out ITileInterface tileInterface))
+                    tileInterface.SetOwningTile(this);
+                if (Occupant)
+                {
+                    Occupant.SetState(CharacterState.Idle);
+                }
             }
-
+            
             IsWalkable = _tileData.IsWalkable;
             NodeWeight = _tileData.MovementCost;
             TileManager.Instance.SetTileGround(this);

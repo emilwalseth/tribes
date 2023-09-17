@@ -209,7 +209,7 @@ namespace Managers
             
             if (currentTile)
             {   
-                SelectTilesInRadius(unit.GetUnitWalkRadius(), currentTile, true);
+                SelectTilesInRadius(unit.Stats.WalkRadius, currentTile, true);
             }
             
             SelectedUnit = unit;
@@ -288,8 +288,6 @@ namespace Managers
             else
             {
                 print("Selecting Character");
-
-                DeselectUnit();
                 MarkedEnemy = character.gameObject;
                 TryOpenEnemyMenu(character);
                 MarkEnemyCharacter(character);
@@ -303,7 +301,7 @@ namespace Managers
             TileScript currentTile = character.GetCurrenTile();
             if (!currentTile) return;
             
-            if (character.CurrentUnit.State == UnitState.Idle)
+            if (character.State == CharacterState.Idle)
             {
                 UIManager.instance.OpenContextMenu(currentTile.TileData.MenuOptions);
             }
@@ -313,7 +311,8 @@ namespace Managers
         {
             if (!character) return;
 
-            if (SelectedCharacter && IsTileSelected(SelectedCharacter.GetCurrenTile()))
+            Unit selectedUnit = GetSelectedUnit();
+            if (selectedUnit && IsTileSelected(selectedUnit.GetCurrentTile()))
             {
                 UIManager.instance.OpenContextMenu(character.EnemyMenuOptions);
             }
@@ -332,7 +331,7 @@ namespace Managers
             {
                 TileScript currentTile = SelectedUnit.GetCurrentTile();
                 
-                if (currentTile) SelectTilesInRadius(SelectedUnit.GetUnitWalkRadius(), currentTile, true);
+                if (currentTile) SelectTilesInRadius(SelectedUnit.Stats.WalkRadius, currentTile, true);
             }
         }
         public bool IsTileSelected(TileScript tile)

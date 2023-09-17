@@ -19,12 +19,12 @@ namespace UI
 
         private void OnEnable()
         {
-            StatsManager.Instance.onStatsChanged += SetRequirement;
+            TeamManager.Instance.GetTeam(0).onStatsChanged += SetRequirement;
         }
     
         private void OnDisable()
         {
-            StatsManager.Instance.onStatsChanged -= SetRequirement;
+            TeamManager.Instance.GetTeam(0).onStatsChanged -= SetRequirement;
         }
 
         public void InitializeWidget(ResourceData resourceData, int requiredAmount)
@@ -39,7 +39,7 @@ namespace UI
             _icon.sprite = _resourceData.ResourceIcon;
             _amountText.text = _requiredAmount.ToString();
 
-            bool isEnough = StatsManager.Instance.HasResource(_resourceData, _requiredAmount);
+            bool isEnough = TeamManager.Instance.GetTeam(0).HasResource(_resourceData.ResourceType, _requiredAmount);
             
             _amountText.color = isEnough ? Color.white : Color.red;
         }

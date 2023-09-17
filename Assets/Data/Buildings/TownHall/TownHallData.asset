@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 099440aae865069438e1d5ad3b136290, type: 3}
-  m_Name: TownData
+  m_Name: TownHallData
   m_EditorClassIdentifier: 
   _buildingData:
     _tileData: {fileID: 11400000, guid: b7530b54b59b6264b9a67c7ba7759464, type: 2}

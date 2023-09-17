@@ -58,6 +58,11 @@ namespace Managers
         }
         
         
+        public void DoRotateToAnimation(GameObject animObject, Quaternion target, float duration, bool worldSpace = true)
+        {
+            StartCoroutine(RotateToAnim(animObject, target, duration, worldSpace));
+        }
+        
         public void DoMoveFromToAnimation(GameObject animObject, Vector3 from, Vector3 to, bool inverse, float duration, bool worldSpace = true, UnityAction animCallback = null)
         {
             StartCoroutine(MoveFromToAnim(animObject, from, to, _bounceInCurve, inverse, duration, worldSpace, animCallback));
@@ -70,7 +75,9 @@ namespace Managers
             
             while (Time.realtimeSinceStartup < targetTime)
             {
-                    animObject.transform.position += moveAmount * direction.normalized;
+                if (!animObject) yield break;
+                
+                animObject.transform.position += moveAmount * direction.normalized;
 
                 yield return null;
             }
@@ -139,6 +146,26 @@ namespace Managers
             }
         }
         
+        private IEnumerator RotateToAnim(GameObject animObject, Quaternion target, float duration, bool worldSpace = true)
+        {
+            Quaternion startRot = worldSpace ? animObject.transform.rotation : animObject.transform.localRotation;
+            float startTime = Time.realtimeSinceStartup;
+            float percent = 0;
+            
+            while (Math.Abs(percent - 1) > 0)
+            {   
+                percent = Mathf.InverseLerp(startTime, startTime + duration, Time.realtimeSinceStartup);
+                float value = _easeCurve.Evaluate(percent);
+
+                if (worldSpace)
+                    animObject.transform.rotation = Quaternion.Lerp(startRot, target, value);
+                else
+                    animObject.transform.localRotation = Quaternion.Lerp(startRot, target, value);
+                
+                yield return null;
+            }
+        }
+        
         private IEnumerator MoveFromToAnim(GameObject animObject, Vector3 from, Vector3 to, AnimationCurve curve, bool inverse, float duration, bool worldSpace = true, UnityAction animCallback = null)
         {
             float startTime = Time.realtimeSinceStartup;
@@ -185,7 +212,7 @@ namespace Managers
             
             float percent = 0;
             float startTime = Time.realtimeSinceStartup;
-            Vector3 start = animObject.transform.localScale;
+            Vector3 start = Vector3.one;
             Vector3 end = new (0, 0, 0);
             
             while (Math.Abs(percent - 1) > 0)
@@ -196,8 +223,8 @@ namespace Managers
                 animObject.transform.localScale = Vector3.LerpUnclamped(start, end, value * 0.3f);
                 yield return null;
             }
+
             animCallback?.Invoke();
-            animObject.transform.localScale = start;
         }
         
     }

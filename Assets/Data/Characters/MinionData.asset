@@ -15,3 +15,5 @@ MonoBehaviour:
   _characterMesh: {fileID: 7615726817301172277, guid: d9449d1cba806264197a5fc491942b7d, type: 3}
   _harvestSpeed: 1.5
   _walkRadius: 1
+  _attackRadius: 1
+  _attackSpeed: 1.5

@@ -14,4 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _characterMesh: {fileID: 8400425641593728444, guid: c7939ffbde0f0184d9257112e842493a, type: 3}
   _harvestSpeed: 1
-  _walkRadius: 10
+  _walkSpeed: 1
+  _walkRadius: 4
+  _attackRadius: 1
+  _attackSpeed: 1

@@ -11,6 +11,15 @@ using World;
 
 namespace Characters
 {
+    
+    public enum CharacterState
+    {
+        Idle,
+        Moving,
+        Working,
+        
+    }
+    
     public class Character : MonoBehaviour, IInteractable
     {
         
@@ -26,6 +35,7 @@ namespace Characters
         
         private Animator _animator;
         public Unit CurrentUnit { get; set; }
+        public CharacterState State { get; private set; } = CharacterState.Idle;
         public CharacterData CharacterData => _characterData;
         public List<RectTransform> EnemyMenuOptions => _enemyMenuOptions;
         public List<RectTransform> TeamMenuOptions => _teamMenuOptions;
@@ -45,7 +55,6 @@ namespace Characters
         }
         public void SetAttackTarget(Unit targetUnit)
         {
-            
             if (targetUnit)
             {
                 InvokeRepeating(nameof(TryAttacking), 0, 0.1f);
@@ -62,10 +71,12 @@ namespace Characters
         private void TryAttacking()
         {
             if (!_targetUnit) return;
-
             float radius = (_characterData.AttackRadius + 0.05f) * MapManager.Instance.TileSize;
             
-            if (Vector3.Distance(_targetUnit.transform.position, transform.position) > radius) return;
+            Vector3 targetPosition = _targetUnit.transform.position;
+            Vector3 currentPosition = CurrentUnit.transform.position;
+            
+            if (Vector3.Distance(targetPosition, currentPosition) > radius) return;
             
             if (_timeLastAttack + _characterData.AttackSpeed >= Time.realtimeSinceStartup) return;
             _timeLastAttack = Time.realtimeSinceStartup;
@@ -73,6 +84,9 @@ namespace Characters
             // TODO: Choose character
             Character targetCharacter = _targetUnit.CharactersInUnit[0];
             
+            Quaternion targetRot = Quaternion.LookRotation(targetPosition - currentPosition);
+            AnimationManager.Instance.DoRotateToAnimation(gameObject, targetRot, 0.5f, true);
+            SetTool(ToolType.Sword);
             PlayAttackAnim();
             targetCharacter.Damage(0);
             
@@ -95,6 +109,26 @@ namespace Characters
             
         }
 
+        public void SetState(CharacterState newState)
+        {
+
+            State = newState;
+            SetIsMoving(newState == CharacterState.Moving);
+            
+            switch (newState)
+            {
+                case CharacterState.Idle:
+                    break;
+                case CharacterState.Moving:
+                    break;
+                case CharacterState.Working:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(newState), newState, null);
+            }
+            
+        }
+
         public void OnClicked()
         {
             SelectionManager.Instance.SelectCharacter(this);
@@ -105,18 +139,6 @@ namespace Characters
         {
             return CurrentUnit ? CurrentUnit.GetCurrentTile() : null;
         }
-
-        public UnitState GetState()
-        {
-            return CurrentUnit ? CurrentUnit.State : UnitState.Idle;
-        }
-
-        public void SetState(UnitState state)
-        {
-            if (!CurrentUnit) return;
-            CurrentUnit.State = state;
-        }
-        
         public void OnSelected()
         {
             SetRenderPathVisibility(true);
@@ -167,7 +189,6 @@ namespace Characters
         }
         public void PlayAttackAnim()
         { 
-            SetTool(ToolType.Sword);
             _animator.Play(Attack, 1,0f);
             _animator.Play(Attack, 2,0f);
         }

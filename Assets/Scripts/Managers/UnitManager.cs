@@ -25,7 +25,7 @@ namespace Managers
                     splitFrom.GetCurrentTile() : 
                     MapManager.Instance.GetTileAtPosition(splitFrom.CurrentNavigationPath[0]);
             
-            Unit spawnedUnit = SpawnUnitInternal(splitFrom.transform.position, startTile);
+            Unit spawnedUnit = SpawnUnitInternal(splitFrom.transform.position, startTile, splitFrom.TeamIndex);
             
             spawnedUnit.RecentSplitUnit = splitFrom;
             splitFrom.RecentSplitUnit = spawnedUnit;
@@ -33,9 +33,11 @@ namespace Managers
             return spawnedUnit;
         }
 
-        private Unit SpawnUnitInternal(Vector3 spawnPos, TileScript startTile)
+        private Unit SpawnUnitInternal(Vector3 spawnPos, TileScript startTile, int teamIndex)
         {
             Unit spawnedUnit = Instantiate(_unitPrefab, spawnPos, Quaternion.identity);
+            spawnedUnit.TeamIndex = teamIndex;
+            TeamManager.Instance.GetTeam(teamIndex).Units.Add(spawnedUnit);
             spawnedUnit.SetCurrentTile(startTile.transform.position);
             return spawnedUnit;
             
@@ -54,7 +56,7 @@ namespace Managers
         private Character SpawnCharacter(TileScript spawnTile, CharacterData characterData, int teamIndex)
         {
             Vector3 spawnPos = spawnTile.transform.position;
-            Unit unit = SpawnUnitInternal(spawnPos, spawnTile);
+            Unit unit = SpawnUnitInternal(spawnPos, spawnTile, teamIndex);
 
             Character character = Instantiate(_characterPrefab, spawnTile.transform);
             character.transform.localRotation = Quaternion.Euler(0, -135, 0);
@@ -62,8 +64,7 @@ namespace Managers
             character.SetCharacterData(characterData);
             character.CurrentUnit = unit;
             character.transform.parent = unit.transform;
-
-            unit.TeamIndex = teamIndex;
+            
             unit.AddCharacter(character);
             unit.SetNewOccupant(spawnTile);
             unit.SetCurrentTile(spawnPos);

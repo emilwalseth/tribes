@@ -24,9 +24,8 @@ namespace Managers
             indicator.SetImage(sprite);
         }
         
-        public void StartHarvesting()
+        public void StartHarvesting(Character character)
         {
-            Character character = SelectionManager.Instance.SelectedCharacter;
             float harvestTime = character.CharacterData.HarvestSpeed;
             StartHarvesting(character, harvestTime, 1f);
         }
@@ -34,7 +33,7 @@ namespace Managers
         private void StartHarvesting(Character character, float harvestTime, float harvestEfficiency)
         {
             if (!character) return;
-            character.SetState(UnitState.Working);
+            character.SetState(CharacterState.Working);
             UIManager.instance.CloseMenu();
             StartCoroutine(Harvesting(character, harvestTime, harvestEfficiency));
         }
@@ -42,13 +41,15 @@ namespace Managers
         private static IEnumerator Harvesting(Character character, float harvestTime, float harvestEfficiency)
         {
             
-
             while (true)
             {
                 TileScript tile = character.GetCurrenTile();
+
+                if (tile.TryGetComponent(out ResourceTileScript resource))
+                    character.SetTool(resource.ToolType);
                 
                 // If the character is no longer working or the currentTile is no longer the one we are in, quit chopping
-                if (character.GetState() != UnitState.Working || !tile)
+                if (character.State != CharacterState.Working || !tile)
                 {
                     character.SetTool(ToolType.None);
                     yield break;

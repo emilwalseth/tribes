@@ -76,7 +76,7 @@ namespace AI
             // Walk towards target
             if (!_target.TryGetComponent(out Unit targetUnit)) return;
             
-            if (distance <= _unit.GetUnitWalkRadius())
+            if (distance <= _unit.Stats.WalkRadius)
             {
                 // Navigate towards enemy
                 _unit.NavigateToTile(targetUnit.GetCurrentTile());

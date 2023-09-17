@@ -12,12 +12,13 @@ namespace UI
         public void MakeCampsite()
         {
             TileScript tile = SelectionManager.Instance.GetSelectedTile();
-            TileManager.Instance.CreateTown(tile);
+            TileManager.Instance.CreateTown(tile, 0);
         }
 
         public void StartHarvesting()
         {
-            InteractionManager.Instance.StartHarvesting();
+            Character character = SelectionManager.Instance.SelectedCharacter;
+            InteractionManager.Instance.StartHarvesting(character);
         }
 
         public void Attack()

@@ -15,6 +15,7 @@ namespace Managers
         
 
         [SerializeField] private TileScript _baseTile;
+        [SerializeField] private TownData _townData;
         [Space(10)]
         [Header("Ground Meshes")]
         [SerializeField] private Mesh _unexploredGround;
@@ -31,6 +32,7 @@ namespace Managers
         [SerializeField] private TileData _campsiteTileData;
         
         
+        public TownData TownData => _townData;
         public TileData GrassTileData => _grassTileData;
         public TileData WaterTileData => _waterTileData;
         public TileData ForestTileData => _forestTileData;
@@ -73,14 +75,16 @@ namespace Managers
             
         }
         
-        public void PlaceBuilding(TileScript tile, BuildingTileData buildingData)
+        public void PlaceBuilding(int teamIndex, TileScript tile, BuildingTileData buildingData)
         {
             if (!(tile && buildingData)) return;
             
             TileData tileData = buildingData.BuildingData.TileData;
             if (!tileData) return;
             
-            tile.SetTileData(tileData);
+            TeamManager.Instance.GetTeam(teamIndex).Buildings.Add(tile);
+            
+            tile.SetTileData(tileData, teamIndex);
         }
         
         public Mesh GetUnexploredMesh()
@@ -88,9 +92,11 @@ namespace Managers
             return _unexploredGround;
         }
         
-        public void CreateTown(TileScript tile)
+        public void CreateTown(TileScript tile, int teamIndex)
         {
-            tile.SetTileData(CampsiteTileData);
+            tile.SetTileData(CampsiteTileData, teamIndex);
+            MapManager.Instance.AddTownTile(tile);
+            TeamManager.Instance.GetTeam(teamIndex).Towns.Add(tile);
         }
         
         public void SetGrass(TileScript tile)

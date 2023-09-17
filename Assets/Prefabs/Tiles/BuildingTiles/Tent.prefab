@@ -4938,6 +4938,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6633831616866298406}
+  - component: {fileID: -3403865185725650735}
   m_Layer: 0
   m_Name: Tent
   m_TagString: Untagged
@@ -4962,3 +4963,17 @@ Transform:
   - {fileID: 622354028504286057}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &-3403865185725650735
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7069355164461558691}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ba205390e4bb8d4fb82479e7d6220a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _level: 1
+  _buildingTileData: {fileID: 11400000, guid: 9307a2eb704d82341939c78d3b00d2d8, type: 2}

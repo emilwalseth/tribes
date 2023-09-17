@@ -4,8 +4,11 @@ using Data.GeneralTiles;
 using Tiles;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.Tilemaps;
 using World;
 using Random = UnityEngine.Random;
+using TileData = Data.GeneralTiles.TileData;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Managers
 {
@@ -29,8 +32,9 @@ namespace Managers
             
         
         public int TileSize => _tileSize;
-    
-        
+
+        private List<TileScript> _townTiles = new List<TileScript>();
+            
         // Private
         private readonly Dictionary<Vector3, TileScript> _mapTiles = new();
 
@@ -41,6 +45,11 @@ namespace Managers
         {
             MakeMapGrid();
 
+        }
+        
+        public void AddTownTile(TileScript townTile)
+        {
+            _townTiles.Add(townTile);
         }
 
 
@@ -71,6 +80,63 @@ namespace Managers
         }
 
 
+        public TileScript GetBestSpawnPoint()
+        {
+
+            Dictionary<TileScript, float> rankedList = new ();
+
+            Vector3 mapCenter = GetMapCenter();
+            
+            foreach (KeyValuePair<Vector3, TileScript> tile in _mapTiles)
+            {
+                if (!tile.Value.TileData.IsWalkable) continue;
+
+                if (_townTiles.Contains(tile.Value)) continue;
+                
+                
+                int score = 0;
+                int distance = (int)Vector3.Distance(mapCenter, tile.Value.transform.position);
+                
+                
+                score += distance;
+                
+                                
+                foreach (TileScript town in _townTiles)
+                {
+                    int townDistance = (int)Vector3.Distance(town.transform.position, tile.Value.transform.position);
+                    float townScorePercent = Mathf.InverseLerp(60, 0, townDistance);
+                    if (townScorePercent < 0.2f) score -= 1000;
+                    int townScore = (int)(townScorePercent * 200);
+                    score -= townScore;
+                }
+
+                
+                List<TileScript> neighbors = SelectionManager.Instance.GetRadius(3, tile.Value).ToList();
+                
+                foreach (TileScript neighbor in neighbors)
+                {
+                    if (neighbor.TownTile)
+                    {
+                        tile.Value.SetDebugText(0.ToString());
+                        continue;
+                    }
+                    
+                    if (neighbor.TileData.IsWalkable)
+                    {
+                        score += 20;
+                    }
+                }
+
+                
+                tile.Value.SetDebugText(score.ToString());
+                rankedList.Add(tile.Value, score);
+            }
+            rankedList = rankedList.OrderByDescending(pair => pair.Value).ToDictionary(pair => pair.Key, pair => pair.Value);
+            return rankedList.First().Key;
+        }
+        
+        
+
         void MakeMapGrid()
         {
 
@@ -92,7 +158,7 @@ namespace Managers
                     Vector3 tilePosition = position + transform.position;
 
                     TileScript newTile = TileManager.Instance.CreateTile(tilePosition);
-                    newTile.SetExplored(_startExplored);
+                    newTile.SetExplored(_startExplored, true);
 
                     TileData tileData;
                     

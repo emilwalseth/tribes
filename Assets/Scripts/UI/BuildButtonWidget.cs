@@ -27,7 +27,7 @@ namespace UI
         private void OnEnable()
         {
             UpdateRequirements();
-            StatsManager.Instance.onStatsChanged += UpdateEnabled;
+            TeamManager.Instance.GetTeam(0).onStatsChanged += UpdateEnabled;
             _buildButton.onClick.AddListener(Build);
             _buildButtonText.text = "Build " + _buildingData.BuildingData.TileData.TileName;
             UpdateEnabled();
@@ -53,7 +53,7 @@ namespace UI
             
             foreach (ResourceKeyValuePair requirement in requirements)
             {
-                if (StatsManager.Instance.HasResource(requirement.Resource, requirement.Amount)) continue;
+                if (TeamManager.Instance.GetTeam(0).HasResource(requirement.Resource.ResourceType, requirement.Amount)) continue;
                 
                 _buildButton.interactable = false;
                 return;
@@ -93,7 +93,7 @@ namespace UI
         
         private void OnDisable()
         {
-            StatsManager.Instance.onStatsChanged -= UpdateEnabled;
+            TeamManager.Instance.GetTeam(0).onStatsChanged -= UpdateEnabled;
             _buildButton.onClick.RemoveAllListeners();
         }
     
@@ -101,7 +101,7 @@ namespace UI
         {
             TileScript tile = SelectionManager.Instance.GetSelectedTile();
             if (!tile) return;
-            TileManager.Instance.PlaceBuilding(tile, _buildingData);
+            TileManager.Instance.PlaceBuilding(0, tile, _buildingData);
             RemoveResources();
             UIManager.instance.CloseMenu();
         }
@@ -114,7 +114,7 @@ namespace UI
 
             foreach (ResourceKeyValuePair requirement in requirements.Resources)
             {
-                StatsManager.Instance.RemoveResource(requirement.Resource, requirement.Amount);
+                TeamManager.Instance.GetTeam(0).RemoveResource(requirement.Resource.ResourceType, requirement.Amount);
             }
         }
     }

@@ -12,8 +12,7 @@ namespace Data.Actions
         public override void Execute(GameObject executor)
         {
             if (!executor.TryGetComponent(out TileScript tileScript)) return;
-            UnitManager.Instance.SpawnMinion(tileScript, 0);
-
+            UnitManager.Instance.SpawnMinion(tileScript, tileScript.ClaimedByTeam);
         }
     }
 }
