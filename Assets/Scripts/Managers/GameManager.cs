@@ -6,6 +6,7 @@ using Characters;
 using Data.GeneralTiles;
 using Tiles;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 
 namespace Managers
@@ -17,6 +18,7 @@ namespace Managers
         public static GameManager Instance { get; private set; }
         
         [SerializeField] private AIController _aiControllerPrefab;
+        [SerializeField] private GameObject _graveStonePrefab;
 
         private void Awake()
         {
@@ -38,9 +40,13 @@ namespace Managers
             {
                 // Create Team
                 TeamManager.Instance.AddTeam(i);
-                // Spawn AI controller
-                AIController aiController = Instantiate(_aiControllerPrefab, Vector3.zero, Quaternion.identity);
-                aiController.SetTeamIndex(i);
+                
+                if (i != 0)
+                {
+                    // Spawn AI controller
+                    AIController aiController = Instantiate(_aiControllerPrefab, Vector3.zero, Quaternion.identity);
+                    aiController.SetTeamIndex(i);
+                }
                 
                 TileScript spawnTile = MapManager.Instance.GetBestSpawnPoint();
                 TileManager.Instance.CreateTown(spawnTile, i);
@@ -49,6 +55,30 @@ namespace Managers
             EventManager.Instance.onHeroSpawned?.Invoke(TeamManager.Instance.GetTeam(0).Units[0].CharactersInUnit[0]);
         }
 
+        public void SpawnGravestone(Vector3 position)
+        {
+            Quaternion random = Quaternion.Euler(0, Random.Range(0, 360), 0);
+            GameObject graveStone = Instantiate(_graveStonePrefab, position, random);
+        }
+        
+        public void GameOver(int forTeam)
+        {
+            if (forTeam == 0)
+            {
+                // Restart game
+                StartCoroutine(GameOverSequence());   
+            }
+            else if (TeamManager.Instance.TeamCount == 1)
+            {
+                print("Team " + forTeam + " wins!");
+            }
 
+        }
+        
+        private IEnumerator GameOverSequence()
+        {
+            yield return new WaitForSeconds(1);
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
     }
 }

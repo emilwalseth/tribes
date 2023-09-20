@@ -58,8 +58,9 @@ namespace Tiles
             {
                 if (SelectionManager.Instance.IsTileSelected(this))
                 {
-                    if (!Occupant || Occupant.TeamIndex == 0)
-                        selectedCharacter.CurrentUnit.SplitFromUnit(selectedCharacter);
+                    if (selectedCharacter.GetCurrenTile() != this || selectedCharacter.State == CharacterState.Moving)
+                        if (!Occupant || Occupant.TeamIndex == 0)
+                            selectedCharacter.CurrentUnit.SplitFromUnit(selectedCharacter);
                     
                     chosenUnit = selectedCharacter.CurrentUnit;
                 }
@@ -68,12 +69,10 @@ namespace Tiles
             // If there is a unit selected, move it to this tile
             if (chosenUnit)
             {
-                chosenUnit.AI.SetState(AIState.None);
-                
+
                 if (SelectionManager.Instance.IsTileSelected(this))
                 {
                     bool success = chosenUnit.NavigateToTile(this);
-                    print(success);
                     if (success)
                     {
                         UIManager.instance.CloseMenu();
@@ -159,9 +158,8 @@ namespace Tiles
             _mainTile.SetActive(IsExplored);
             if (Occupant)
             {
-                Occupant.gameObject.SetActive(newExplored);
+                Occupant.SetTeamHidden(!newExplored);
             }
-
         }
 
         private void UpdateTile()

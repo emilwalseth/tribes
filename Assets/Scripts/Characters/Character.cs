@@ -17,7 +17,7 @@ namespace Characters
         Idle,
         Moving,
         Working,
-        
+        Attacking,
     }
     
     public class Character : MonoBehaviour, IInteractable
@@ -27,6 +27,7 @@ namespace Characters
         [SerializeField] private CharacterData _characterData;
         [SerializeField] private CharacterTool _tool;
         [SerializeField] private MeshFilter _characterMeshFilter;
+        [SerializeField] private MeshRenderer _characterMeshRenderer;
         
         [SerializeField] private List<RectTransform> _enemyMenuOptions = new();
         [SerializeField] private List<RectTransform> _teamMenuOptions = new();
@@ -48,11 +49,31 @@ namespace Characters
         
         private float _timeLastAttack;
         private Unit _targetUnit;
+        private float _currentHealth;
 
         private void Awake()
         {
             _animator = GetComponent<Animator>();
         }
+
+        private void Start()
+        {
+            _currentHealth = _characterData.Health;
+        }
+
+        public void SetHidden(bool newHidden)
+        {
+            if (_characterMeshRenderer.enabled == !newHidden) return;
+            
+            _characterMeshRenderer.enabled = !newHidden;
+            _tool.SetHidden(newHidden);
+        }
+
+        public bool GetHidden()
+        {
+            return !_characterMeshRenderer.enabled;
+        }
+        
         public void SetAttackTarget(Unit targetUnit)
         {
             if (targetUnit)
@@ -62,15 +83,25 @@ namespace Characters
             }
             else
             {
-                CancelInvoke(nameof(TryAttacking));
-                _targetUnit = null;
-                SetTool(ToolType.None);
+                StopAttacking();
             }
+        }
+
+        private void StopAttacking()
+        {
+            CancelInvoke(nameof(TryAttacking));
+            _targetUnit = null;
+            SetTool(ToolType.None);
+            State = CharacterState.Idle;
         }
         
         private void TryAttacking()
         {
-            if (!_targetUnit) return;
+            if (!_targetUnit)
+                StopAttacking();
+            
+            State = CharacterState.Attacking;
+            
             float radius = (_characterData.AttackRadius + 0.05f) * MapManager.Instance.TileSize;
             
             Vector3 targetPosition = _targetUnit.transform.position;
@@ -88,7 +119,7 @@ namespace Characters
             AnimationManager.Instance.DoRotateToAnimation(gameObject, targetRot, 0.5f, true);
             SetTool(ToolType.Sword);
             PlayAttackAnim();
-            targetCharacter.Damage(0);
+            targetCharacter.Damage(CurrentUnit, _characterData.Damage);
             
         }
 
@@ -108,6 +139,7 @@ namespace Characters
             }
             
         }
+        
 
         public void SetState(CharacterState newState)
         {
@@ -193,12 +225,33 @@ namespace Characters
             _animator.Play(Attack, 2,0f);
         }
 
-        public void Damage(int amount)
+        public void Damage(Unit fromUnit,  float amount)
         {
             Sprite sprite = Resources.Load<Sprite>("Textures/AlertMarker");
             print(sprite);
-            InteractionManager.Instance.SpawnIndicator(transform.position + new Vector3(0,0,0), sprite);
+
+            _currentHealth -= amount;
+            if (_currentHealth <= 0)
+            {
+                // Split to get this character on its own
+                GameManager.Instance.SpawnGravestone(transform.position);
+                CurrentUnit.SplitFromUnit(this);
+                TeamManager.Instance.GetTeam(CurrentUnit.TeamIndex).RemoveUnit(CurrentUnit);
+                
+                // Then destroy the unit
+                Destroy(CurrentUnit.gameObject);
+                
+                
+            }
+
+            if (!GetHidden())
+                InteractionManager.Instance.SpawnIndicator(transform.position + new Vector3(0,0,0), sprite);
+
             PlayHitAnim();
+            
+            // Attack back
+            SetAttackTarget(fromUnit);
+            
         }
         
         public void PlayHitAnim()

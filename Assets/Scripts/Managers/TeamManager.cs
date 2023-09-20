@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Characters;
 using Player;
 using UnityEngine;
 
@@ -22,9 +23,15 @@ namespace Managers
         }
         public TeamState AddTeam(int teamIndex)
         {
-            _teams.Add(new TeamState());
+            _teams.Add(new TeamState(teamIndex));
             return _teams[teamIndex];
         }
+
+        public void DestroyTeam(int teamIndex)
+        {
+            _teams.RemoveAt(teamIndex);
+        }
+        public int TeamCount => _teams.Count;
         
         
     }

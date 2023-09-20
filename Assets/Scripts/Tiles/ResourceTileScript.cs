@@ -27,7 +27,10 @@ namespace Tiles
    
             character.SetTool(ToolType);
             TeamManager.Instance.GetTeam(character.CurrentUnit.TeamIndex).AddResources(_resources);
-            InteractionManager.Instance.SpawnIndicator(transform.position, Resources.First().Resource.ResourceIcon);
+            
+            if (character.CurrentUnit.TeamIndex == 0)
+                InteractionManager.Instance.SpawnIndicator(transform.position, Resources.First().Resource.ResourceIcon);
+            
         }
 
         public void OnInteract(Character character)

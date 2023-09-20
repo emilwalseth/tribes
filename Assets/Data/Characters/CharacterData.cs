@@ -7,12 +7,16 @@ namespace Characters
     {
         [SerializeField] private Mesh _characterMesh;
         [SerializeField] private float _harvestSpeed = 0.5f;
+        [SerializeField] private float _health = 5;
+        [SerializeField] private float _damage = 1;
         [SerializeField] private float _walkSpeed = 1;
         [SerializeField] private int _walkRadius = 1;
         [SerializeField] private int _attackRadius = 1;
         [SerializeField] private float _attackSpeed = 1;
         
         public Mesh CharacterMesh => _characterMesh;
+        public float Health => _health;
+        public float Damage => _damage;
         public float WalkSpeed => _walkSpeed; 
         public float HarvestSpeed => _harvestSpeed;
         public int WalkRadius => _walkRadius;

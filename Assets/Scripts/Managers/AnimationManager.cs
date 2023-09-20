@@ -117,7 +117,7 @@ namespace Managers
             float startTime = Time.realtimeSinceStartup;
             float percent = 0;
             
-            while (Math.Abs(percent - 1) > 0)
+            while (Math.Abs(percent - 1) > 0 && sprite)
             {
                 Color color = sprite.color;
                 percent = Mathf.InverseLerp(startTime, startTime + duration, Time.realtimeSinceStartup);
@@ -132,7 +132,7 @@ namespace Managers
             float startTime = Time.realtimeSinceStartup;
             float percent = 0;
             
-            while (Math.Abs(percent - 1) > 0)
+            while (Math.Abs(percent - 1) > 0 && animObject)
             {   
                 percent = Mathf.InverseLerp(startTime, startTime + duration, Time.realtimeSinceStartup);
                 float value = curve.Evaluate(inverse ? 1 - percent : percent);
@@ -152,7 +152,7 @@ namespace Managers
             float startTime = Time.realtimeSinceStartup;
             float percent = 0;
             
-            while (Math.Abs(percent - 1) > 0)
+            while (Math.Abs(percent - 1) > 0 && animObject)
             {   
                 percent = Mathf.InverseLerp(startTime, startTime + duration, Time.realtimeSinceStartup);
                 float value = _easeCurve.Evaluate(percent);
@@ -171,7 +171,7 @@ namespace Managers
             float startTime = Time.realtimeSinceStartup;
             float percent = 0;
             
-            while (Math.Abs(percent - 1) > 0)
+            while (Math.Abs(percent - 1) > 0 && animObject)
             {   
                 percent = Mathf.InverseLerp(startTime, startTime + duration, Time.realtimeSinceStartup);
                 float value = curve.Evaluate(inverse ? 1 - percent : percent);
@@ -194,7 +194,7 @@ namespace Managers
             float startTime = Time.realtimeSinceStartup;
             Vector3 start = animObject.transform.localScale;
             
-            while (Math.Abs(percent - 1) > 0)
+            while (Math.Abs(percent - 1) > 0 && animObject)
             {
                 percent = Mathf.InverseLerp(startTime, startTime + duration, Time.realtimeSinceStartup);
                 
@@ -215,7 +215,7 @@ namespace Managers
             Vector3 start = Vector3.one;
             Vector3 end = new (0, 0, 0);
             
-            while (Math.Abs(percent - 1) > 0)
+            while (Math.Abs(percent - 1) > 0 && animObject)
             {
                 percent = Mathf.InverseLerp(startTime, startTime + duration, Time.realtimeSinceStartup);
                 

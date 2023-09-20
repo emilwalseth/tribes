@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Characters;
 using Data.Resources;
+using Managers;
 using Tiles;
 using UnityEngine.Events;
 
@@ -13,12 +14,14 @@ namespace Player
     {
         private List<TileScript> _towns = new();
         private List<Unit> _units = new();
-        
-    
+
+
+        private int _teamIndex = 0;
         private List<TileScript> _buildings = new List<TileScript>();
         private List<ResourceTileScript> _seenResources = new List<ResourceTileScript>();
         private List<BuildingTileScript> _seenBuildings = new List<BuildingTileScript>();
     
+        public int TeamIndex => _teamIndex;
         public List<TileScript> Towns => _towns;
         public List<TileScript> Buildings => _buildings;
         public List<Unit> Units => _units;
@@ -29,7 +32,11 @@ namespace Player
 
         public UnityAction onStatsChanged;
 
-
+        public TeamState(int index)
+        {
+            _teamIndex = index;
+        }
+        
         public bool HasResource(ResourceType resourceType, int amount)
         {
             return Resources.ContainsKey(resourceType) && Resources[resourceType] >= amount;
@@ -68,6 +75,19 @@ namespace Player
             }
             
             onStatsChanged?.Invoke();
+        }
+        
+        
+        public void RemoveUnit(Unit unit)
+        {
+            if (Units.Contains(unit))
+            {
+                Units.Remove(unit);
+            }
+            if (Units.Count == 0)
+            {
+                GameManager.Instance.GameOver(_teamIndex);
+            }
         }
 
         public void RemoveResource(ResourceType resourceType, int amount)

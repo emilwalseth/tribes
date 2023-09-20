@@ -16,7 +16,7 @@ MonoBehaviour:
   _tileType: 1
   _groundType: 0
   _selectionRadius: 0
-  _movementCost: 3
+  _movementCost: 0
   _isWalkable: 1
   _tile: {fileID: 4520484918043863160, guid: 9dc6e2f6d1bbcb246b397224d58b45f2, type: 3}
   _menuOptions:

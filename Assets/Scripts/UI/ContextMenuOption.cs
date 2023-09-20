@@ -28,8 +28,14 @@ namespace UI
             Unit selectedUnit = SelectionManager.Instance.GetSelectedUnit();
             if (!selectedUnit) return;
 
-            if (!enemy.TryGetComponent(out Character character)) return;
-            selectedUnit.Attack(character.CurrentUnit);
+            Unit enemyUnit = enemy.GetComponent<Unit>();
+            if (!enemyUnit)
+            {
+                if (!enemy.TryGetComponent(out Character character)) return;
+                enemyUnit = character.CurrentUnit;
+            }
+            
+            selectedUnit.Attack(enemyUnit);
             SelectionManager.Instance.DeselectEnemy();
             UIManager.instance.CloseMenu();
 

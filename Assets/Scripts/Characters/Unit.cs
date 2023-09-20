@@ -144,17 +144,34 @@ namespace Characters
 
             Vector3 nextPosition = CurrentNavigationPath[0];
             Vector3 targetPosition = CurrentNavigationPath[^1];
+
+            TileScript fallbackTile;
             
             if ((nextPosition - targetPosition).magnitude < 0.1f)
             {
                 TileScript targetTile = GetCurrentTile();
                 SetCurrentTile(targetPosition);
-                NavigateToTile(targetTile);
+                fallbackTile = targetTile;
             }
             else
             {
-                CurrentNavigationPath.Remove(targetPosition);
+                Vector3 fallbackPos = CurrentNavigationPath[^2];
+                fallbackTile = MapManager.Instance.GetTileAtPosition(fallbackPos);
             }
+            
+            if (fallbackTile.Occupant && fallbackTile.Occupant.TeamIndex == TeamIndex)
+            {
+                List<TileScript> tiles =  MapManager.Instance.GetTileNeighbors(GetCurrentTile().gameObject);
+                foreach (TileScript tile in tiles.Where(tile => !tile.Occupant || tile.Occupant.TeamIndex == TeamIndex))
+                {
+                    fallbackTile = tile;
+                    break;
+                }
+            }
+            
+            
+            NavigateToTile(fallbackTile);
+            
             
             NavigationManager.Instance.MakePathRenderer(this);
         }
@@ -190,7 +207,6 @@ namespace Characters
         
         private void OnArrivedTarget()
         {
-            print("Arrived!");
             GetCurrentTile().onOccupantEntered -= OnOccupantUpdated;
             UpdateCharactersMoving(false);
             SetNewOccupant(GetCurrentTile());
@@ -232,6 +248,8 @@ namespace Characters
             if (unit == RecentSplitUnit) return;
             
             bool wasSelected = SelectionManager.Instance.SelectedUnit == unit || SelectionManager.Instance.SelectedUnit == this;
+            if (TeamIndex != 0)
+                wasSelected = false;
             
             foreach (Character character in unit.CharactersInUnit)
             {
@@ -245,16 +263,17 @@ namespace Characters
                     break;
                 }
 
-                if (SelectionManager.Instance.SelectedCharacter == character)
+                if (SelectionManager.Instance.SelectedCharacter == character && TeamIndex == 0)
                     wasSelected = true;
                 
                 character.SetUnit(this);
                 CharactersInUnit.Add(character);
             }
+
+            if (TeamIndex == 0)
+                SelectionManager.Instance.DeselectAll();
             
-            SelectionManager.Instance.DeselectAll();
-            
-            if (wasSelected)
+            if (wasSelected && TeamIndex == 0)
                 SelectionManager.Instance.SelectUnit(this);
             
             unit.CharactersInUnit.Clear();
@@ -344,6 +363,7 @@ namespace Characters
                 Vector3 position = new Vector3(newPos.x, 0, newPos.y) * MapManager.Instance.TileSize;
                 AnimationManager.Instance.DoMoveToAnimation(character.gameObject, position, 0.4f, false);
             }
+            SetTeamHidden(!GetCurrentTile().IsExplored);
             UpdateCharactersMoving(_charactersInUnit[0].State == CharacterState.Moving);
             UpdateStats();
         }
@@ -351,11 +371,21 @@ namespace Characters
         {
             _currentTilePosition = newTilePos;
             TileScript tile = GetCurrentTile();
+
+            SetTeamHidden(!tile.IsExplored);
             
-            gameObject.SetActive(tile.IsExplored);
             ExploreTiles();
         }
 
+        public void SetTeamHidden(bool newHidden)
+        {
+            foreach (Character character in _charactersInUnit)
+            {
+                character.SetHidden(newHidden);
+            }
+            
+        }
+        
         private void ExploreTiles()
         {
             List<TileScript> tiles = SelectionManager.Instance.GetRadius(Stats.WalkRadius, GetCurrentTile());
@@ -478,9 +508,9 @@ namespace Characters
 
                 if (CurrentPathRenderer)
                     CurrentPathRenderer.UpdatePath();
-                
 
-                SelectionManager.Instance.UpdateCharacterSelection();
+                if (TeamIndex == 0)
+                    SelectionManager.Instance.UpdateCharacterSelection();
             }
 
             // Move towards current target

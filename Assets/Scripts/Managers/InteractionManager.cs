@@ -34,7 +34,6 @@ namespace Managers
         {
             if (!character) return;
             character.SetState(CharacterState.Working);
-            UIManager.instance.CloseMenu();
             StartCoroutine(Harvesting(character, harvestTime, harvestEfficiency));
         }
         
@@ -43,6 +42,9 @@ namespace Managers
             
             while (true)
             {
+                if (!character)
+                    yield break;
+                
                 TileScript tile = character.GetCurrenTile();
 
                 if (tile.TryGetComponent(out ResourceTileScript resource))

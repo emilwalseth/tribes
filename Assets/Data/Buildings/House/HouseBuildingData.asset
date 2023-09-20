@@ -18,4 +18,5 @@ MonoBehaviour:
     _buildRequirements:
       _resources:
       - _resourceData: {fileID: 11400000, guid: 1ea5600e990dd8b43b0f104b3cac7c2c, type: 2}
-        _amount: 10
+        _amount: 5
+  _upgradeOptions: []

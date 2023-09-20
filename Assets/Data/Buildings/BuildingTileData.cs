@@ -35,6 +35,7 @@ namespace Data.Buildings
     {
     
         [SerializeField] private BuildingData _buildingData;
+        [SerializeField] private List<BuildingTileData> _upgradeOptions;
         
         public BuildingData BuildingData => _buildingData;
         
