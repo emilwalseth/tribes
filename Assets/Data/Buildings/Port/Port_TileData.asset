@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5070f371427266143af5c2daa6190674, type: 3}
+  m_Name: Port_TileData
+  m_EditorClassIdentifier: 
+  _tileName: Port
+  _tileType: 2
+  _groundType: 2
+  _selectionRadius: 0
+  _movementCost: 0
+  _isWalkable: 1
+  _tile: {fileID: 919132149155446097, guid: aff76dcef1cab93408ee77a9eea74dc3, type: 3}
+  _menuOptions: []
+  _onTilePlaced:
+  - {fileID: 11400000, guid: bd1a82d952920644eab8b5458d072a52, type: 2}

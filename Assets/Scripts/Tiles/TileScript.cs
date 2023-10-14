@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using AI;
 using Characters;
 using Data.Actions;
+using Data.Buildings;
 using Data.GeneralTiles;
 using Interfaces;
 using Managers;
 using TMPro;
+using UI;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace Tiles
 {
-    public class TileScript : NavigationNode, IInteractable
+    public class TileScript : NavigationNode, IInteractable, IContextInterface
     {
         [SerializeField] private TileData _tileData;
         [SerializeField] private GameObject _fogTile;
@@ -46,53 +48,8 @@ namespace Tiles
         public void OnClicked()
         {
             PlayClickedAnimation();
+            SelectionManager.Instance.Select(gameObject);
 
-            Character selectedCharacter = SelectionManager.Instance.SelectedCharacter;
-            Unit selectedUnit = SelectionManager.Instance.SelectedUnit;
-            
-            
-            Unit chosenUnit =  selectedUnit;
-            
-            // If there is only one character selected, split it from its current unit, and give it a new unit
-            if (!chosenUnit && selectedCharacter)
-            {
-                if (SelectionManager.Instance.IsTileSelected(this))
-                {
-                    if (selectedCharacter.GetCurrenTile() != this || selectedCharacter.State == CharacterState.Moving)
-                        if (!Occupant || Occupant.TeamIndex == 0)
-                            selectedCharacter.CurrentUnit.SplitFromUnit(selectedCharacter);
-                    
-                    chosenUnit = selectedCharacter.CurrentUnit;
-                }
-            }
-
-            // If there is a unit selected, move it to this tile
-            if (chosenUnit)
-            {
-
-                if (SelectionManager.Instance.IsTileSelected(this))
-                {
-                    bool success = chosenUnit.NavigateToTile(this);
-                    if (success)
-                    {
-                        UIManager.instance.CloseMenu();
-                        return;
-                    }
-                }
-            }
-            
-            // Select tiles in radius
-            SelectionManager.Instance.DeselectAll();
-            SelectionManager.Instance.SelectTilesInRadius(GetSelectionRadius(), this);
-
-            if (TownTile && TownTile != this && TileData.TileType != TileType.Building)
-            {
-                UIManager.instance.OpenBuildMenu(this);
-            }
-            else
-            {
-                UIManager.instance.CloseMenu();
-            }
         }
 
         public void SetDebugText(string text)
@@ -175,9 +132,7 @@ namespace Tiles
                 if (_currentTile && _currentTile.TryGetComponent(out ITileInterface tileInterface))
                     tileInterface.SetOwningTile(this);
                 if (Occupant)
-                {
                     Occupant.SetState(CharacterState.Idle);
-                }
             }
             
             IsWalkable = _tileData.IsWalkable;
@@ -229,6 +184,64 @@ namespace Tiles
         private void PlayClickedAnimation()
         {
             AnimationManager.Instance.DoBounceAnim(gameObject, 0.25f);
+        }
+
+        public string GetLabel()
+        {
+            return _tileData.TileName;
+        }
+
+        public Sprite GetIcon()
+        {
+            return _tileData.TileIcon;
+        }
+        
+        public bool IsResource()
+        {
+            return _currentTile && _currentTile.TryGetComponent(out ResourceTileScript resource);
+        }
+        
+        public bool IsBuilding()
+        {
+            return _currentTile && _currentTile.TryGetComponent(out BuildingTileScript building);
+        }
+        
+        public ResourceTileScript GetResource()
+        {
+            return _currentTile && _currentTile.TryGetComponent(out ResourceTileScript resource) ? resource : null;
+        }
+        
+        public BuildingTileScript GetBuilding()
+        {
+            return _currentTile && _currentTile.TryGetComponent(out BuildingTileScript building) ? building : null;
+        }
+
+        public List<ContextButtonData> GetContextButtons()
+        {
+
+            List<ContextButtonData> contextButtons = new();
+            BuildingTileScript currentBuilding = GetBuilding();
+
+            if (TownTile && this != TownTile)
+            {
+                int teamIndex = TeamManager.Instance.GetMyTeamIndex();
+                
+                if (!currentBuilding)
+                {
+                    BuildingTileData building = TileManager.Instance.GetTownData().House;
+                    contextButtons.Add(UIManager.instance.MakeBuildButton(this, teamIndex, building));
+                }
+                else
+                {
+                    List<BuildingTileData> upgrades = currentBuilding.BuildingTileData.UpgradeOptions;
+                    foreach (BuildingTileData building in upgrades)
+                    {
+                        contextButtons.Add(UIManager.instance.MakeBuildButton(this, teamIndex, building));
+                    }
+                }
+            }
+            
+            return contextButtons;
         }
     }
 }

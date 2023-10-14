@@ -36,7 +36,7 @@ namespace Managers
         {
             yield return null;
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 3; i++)
             {
                 // Create Team
                 TeamManager.Instance.AddTeam(i);
@@ -49,8 +49,17 @@ namespace Managers
                 }
                 
                 TileScript spawnTile = MapManager.Instance.GetBestSpawnPoint();
+                TileScript characterSpawn = spawnTile;
+                
+                List<TileScript> neighbors = MapManager.Instance.GetTileNeighbors(spawnTile.gameObject);
+                foreach (TileScript neighbor in neighbors.Where(neighbor => neighbor && neighbor.TileData.IsWalkable))
+                {
+                    characterSpawn = neighbor;
+                    break;
+                }
+                
                 TileManager.Instance.CreateTown(spawnTile, i);
-                Character character = UnitManager.Instance.SpawnHero(spawnTile, i);
+                Character character = UnitManager.Instance.SpawnHero(characterSpawn, i);
             }
             EventManager.Instance.onHeroSpawned?.Invoke(TeamManager.Instance.GetTeam(0).Units[0].CharactersInUnit[0]);
         }

@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5070f371427266143af5c2daa6190674, type: 3}
   m_Name: MountainTile
   m_EditorClassIdentifier: 
+  _tileIcon: {fileID: 21300000, guid: 2f4d4cf00235fe140895f57856e91b92, type: 3}
   _tileName: Mountain
   _tileType: 1
   _groundType: 0

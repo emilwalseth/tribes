@@ -49,14 +49,14 @@ namespace AI
             Character character = GetAvailableCharacter();
             if (!character) return;
 
-            TileScript currentTile = character.GetCurrenTile();
+            TileScript currentTile = character.GetCurrentTile();
 
             // If we are already at a resource, harvest this
             if (currentTile.CurrentTile && currentTile.CurrentTile.TryGetComponent(out ResourceTileScript resourceTileScript))
             {
                 if (resourceTileScript.Resources[0].Resource.ResourceType == resourceType)
                 {
-                    StartHarvesting(character, character.GetCurrenTile(), resourceType);
+                    StartHarvesting(character, character.GetCurrentTile(), resourceType);
                     return;
                 }
             }
@@ -81,7 +81,7 @@ namespace AI
 
         private void StartHarvesting(Character character, TileScript tile, ResourceType resourceType)
         {
-            if (character.GetCurrenTile() == tile && tile.CurrentTile && tile.CurrentTile.TryGetComponent(out ResourceTileScript resourceTileScript))
+            if (character.GetCurrentTile() == tile && tile.CurrentTile && tile.CurrentTile.TryGetComponent(out ResourceTileScript resourceTileScript))
             {
                 InteractionManager.Instance.StartHarvesting(character);
             }
@@ -99,7 +99,7 @@ namespace AI
 
         private void Build()
         {
-            BuildingTileData house = TileManager.Instance.TownData.House;
+            BuildingTileData house = TileManager.Instance.GetTownData().House;
             int cost = house.BuildingData.BuildRequirements.Resources[0].Amount;
             bool hasEnough = TeamManager.Instance.GetTeam(_teamIndex).HasResource(ResourceType.Wood, cost);
 
@@ -114,7 +114,7 @@ namespace AI
                     return;
                 }
                 TeamManager.Instance.GetTeam(_teamIndex).RemoveResource(ResourceType.Wood, cost);
-                TileManager.Instance.PlaceBuilding(_teamIndex, tile, TileManager.Instance.TownData.House);
+                TileManager.Instance.PlaceBuilding(_teamIndex, tile, TileManager.Instance.GetTownData().House);
             }
         }
 
@@ -171,10 +171,10 @@ namespace AI
         }
         private TileScript GetClosestResource(Character character, ResourceType resourceType)
         {
-            List<ResourceTileScript> seenResources = TeamManager.Instance.GetTeam(_teamIndex).SeenResources;
+            List<ResourceTileScript> seenResources = TeamManager.Instance.GetTeam(_teamIndex).SeenResourceTiles;
             if (seenResources.Count == 0) return null;
 
-            List<TileScript> unitRadius = SelectionManager.Instance.GetRadius(character.CharacterData.WalkRadius, character.GetCurrenTile());
+            List<TileScript> unitRadius = SelectionManager.Instance.GetRadius(character.CharacterData.WalkRadius, character.GetCurrentTile());
             
             float closestDistance = 1000;
             TileScript closest = null;
@@ -184,7 +184,7 @@ namespace AI
                 {
                     if (!resource)
                     {
-                        TeamManager.Instance.GetTeam(_teamIndex).SeenResources.Remove(resource);
+                        TeamManager.Instance.GetTeam(_teamIndex).SeenResourceTiles.Remove(resource);
                         continue;
                     }
                     

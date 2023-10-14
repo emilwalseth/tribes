@@ -12,8 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d5c3347abfb1184e96eaf896b86726e, type: 3}
   m_Name: HeroData
   m_EditorClassIdentifier: 
+  _characterIcon: {fileID: 21300000, guid: e25180a9b2cb1eb4ab1314534c701ef0, type: 3}
+  _characterName: Viking Hero
   _characterMesh: {fileID: 8400425641593728444, guid: c7939ffbde0f0184d9257112e842493a, type: 3}
   _harvestSpeed: 1
+  _health: 5
+  _damage: 1
   _walkSpeed: 1
   _walkRadius: 4
   _attackRadius: 1

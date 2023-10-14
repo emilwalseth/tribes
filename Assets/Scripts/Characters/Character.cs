@@ -1,9 +1,11 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Interfaces;
 using Managers;
 using Tiles;
+using UI;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
@@ -16,11 +18,11 @@ namespace Characters
     {
         Idle,
         Moving,
-        Working,
+        Harvesting,
         Attacking,
     }
     
-    public class Character : MonoBehaviour, IInteractable
+    public class Character : MonoBehaviour, IInteractable, IContextInterface
     {
         
         
@@ -153,7 +155,7 @@ namespace Characters
                     break;
                 case CharacterState.Moving:
                     break;
-                case CharacterState.Working:
+                case CharacterState.Harvesting:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(newState), newState, null);
@@ -163,17 +165,25 @@ namespace Characters
 
         public void OnClicked()
         {
-            SelectionManager.Instance.SelectCharacter(this);
-            AnimationManager.Instance.DoBounceAnim(gameObject);
+            SelectionManager.Instance.Select(gameObject);
+            if (SelectionManager.Instance.IsSelected(CurrentUnit.gameObject))
+            {
+                CurrentUnit.OnClicked();
+            }
+            else
+            {
+                AnimationManager.Instance.DoBounceAnim(gameObject);
+            }
+            
         }
         
-        public TileScript GetCurrenTile()
+        public TileScript GetCurrentTile()
         {
             return CurrentUnit ? CurrentUnit.GetCurrentTile() : null;
         }
         public void OnSelected()
         {
-            SetRenderPathVisibility(true);
+            CurrentUnit.OnSelected();
         }
         
         public void SetUnit(Unit unit)
@@ -184,15 +194,7 @@ namespace Characters
 
         public void OnDeselected()
         {
-            SetRenderPathVisibility(false);
-        }
-
-        private void SetRenderPathVisibility(bool newVisibility)
-        {
-            if (CurrentUnit && CurrentUnit.CurrentPathRenderer)
-            {
-                CurrentUnit.CurrentPathRenderer.gameObject.transform.localScale = newVisibility ? Vector3.one : Vector3.zero;
-            }
+            CurrentUnit.OnDeselected();
         }
         
         public void SetCharacterData(CharacterData characterData)
@@ -259,6 +261,38 @@ namespace Characters
             _animator.Play(Hit, 1,0f);
         }
 
+        public string GetLabel()
+        {
+            return _characterData.CharacterName;
+        }
 
+        public Sprite GetIcon()
+        {
+            return _characterData.CharacterIcon;
+
+        }
+
+        public List<ContextButtonData> GetContextButtons()
+        {
+            if (CurrentUnit.TeamIndex != TeamManager.Instance.GetMyTeamIndex())
+                return new List<ContextButtonData>();
+            
+            
+            List<ContextButtonData> contextButtons = new();
+
+            TileScript tile = GetCurrentTile();
+
+            // If the tile we are on is a resource tile, show harvest options
+            ResourceTileScript resourceTile = tile.GetResource();
+            if (resourceTile)
+            {
+                if (tile.Occupant && tile.Occupant == CurrentUnit)
+                {
+                    contextButtons.Add(UIManager.instance.MakeHarvestButton(this, resourceTile.Resources[0].Resource));
+                }
+            }
+
+            return contextButtons;
+        }
     }
 }

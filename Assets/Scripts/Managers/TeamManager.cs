@@ -14,9 +14,14 @@ namespace Managers
 
         public bool IsValidTeam(int teamIndex)
         {
-            return _teams.Count >= teamIndex;
+            return _teams.Count >= teamIndex + 1;
         }
-    
+        
+        public int GetMyTeamIndex()
+        {
+            return 0;
+        }
+        
         public TeamState GetTeam(int teamIndex)
         {
             return _teams[teamIndex];

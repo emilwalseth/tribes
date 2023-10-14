@@ -10,8 +10,6 @@ namespace Tiles
 {
     public class ResourceTileScript : MonoBehaviour, ITileInterface
     {
-
-
         
         [SerializeField] private ToolType _toolType;
         [SerializeField] private List<ResourceKeyValuePair> _resources;
@@ -46,5 +44,7 @@ namespace Tiles
         {
             return _owningTile;
         }
+        
+        
     }
 }

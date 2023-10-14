@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5070f371427266143af5c2daa6190674, type: 3}
   m_Name: GrassTile
   m_EditorClassIdentifier: 
+  _tileIcon: {fileID: 21300000, guid: 46ea997b81c565140bef3a8cb5833daf, type: 3}
   _tileName: Grass
   _tileType: 0
   _groundType: 0

@@ -33,9 +33,14 @@ namespace Managers
         private void StartHarvesting(Character character, float harvestTime, float harvestEfficiency)
         {
             if (!character) return;
-            character.SetState(CharacterState.Working);
+            
+            if (character.State == CharacterState.Harvesting)
+                return;
+            
+            character.SetState(CharacterState.Harvesting);
             StartCoroutine(Harvesting(character, harvestTime, harvestEfficiency));
         }
+        
         
         private static IEnumerator Harvesting(Character character, float harvestTime, float harvestEfficiency)
         {
@@ -45,13 +50,13 @@ namespace Managers
                 if (!character)
                     yield break;
                 
-                TileScript tile = character.GetCurrenTile();
+                TileScript tile = character.GetCurrentTile();
 
                 if (tile.TryGetComponent(out ResourceTileScript resource))
                     character.SetTool(resource.ToolType);
                 
                 // If the character is no longer working or the currentTile is no longer the one we are in, quit chopping
-                if (character.State != CharacterState.Working || !tile)
+                if (character.State != CharacterState.Harvesting || !tile)
                 {
                     character.SetTool(ToolType.None);
                     yield break;

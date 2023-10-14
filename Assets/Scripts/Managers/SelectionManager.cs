@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Characters;
+using Interfaces;
 using Selection;
 using Tiles;
 using UnityEngine;
 using UnityEngine.Serialization;
+using UnityEngine.Tilemaps;
 
 namespace Managers
 {
@@ -23,23 +25,24 @@ namespace Managers
         [SerializeField] private GameObject _enemyUnitMarkerPrefab;
 
         public List<TileScript> SelectedTiles { get; private set; } = new();
-        public Character SelectedCharacter { get; private set; }
-        public Unit SelectedUnit { get; private set; }
-        public GameObject MarkedEnemy { get; private set; }
+        
 
-
+        private GameObject _currentSelected;
         private readonly List<SelectionObject> _currentTileSelectionObjects = new();
-        private GameObject _currentTeamMarker;
-        private GameObject _currentEnemyMarker;
+        private GameObject _currentMarker;
 
         
 
         public void DeselectAll()
         {
+            DeselectSelected();
             DeselectTiles();
-            DeselectCharacter();
-            DeselectUnit();
-            DeselectEnemy();
+        }
+
+        public void DeselectSelected()
+        {
+            ClearMarker();
+            SetAsNewSelected(null);
         }
 
         public void DeselectTiles()
@@ -55,31 +58,158 @@ namespace Managers
             DestroySelectionObjects();
         }
         
-        public void DeselectCharacter()
+        public GameObject GetSelected()
         {
-            
-            DeselectEnemy();
-            if (!SelectedCharacter) return;
-            SelectedCharacter.OnDeselected();
-            SelectedCharacter = null;
-            UIManager.instance.CloseMenu();
-            ClearTeamMarker();
-        }
-        
-        public void DeselectUnit()
-        {
-            DeselectEnemy();
-            if (!SelectedUnit) return;
-            SelectedUnit = null;
-            UIManager.instance.CloseMenu();
-            ClearTeamMarker();
-            
+            return _currentSelected;
         }
 
-        public void DeselectEnemy()
+        public bool IsSelected(GameObject checkObject)
         {
-            ClearEnemyMarker();
-            MarkedEnemy = null;
+            return _currentSelected == checkObject;
+        }
+
+        public Unit GetSelectedUnit()
+        {
+            if (!_currentSelected) return null;
+            
+            if (_currentSelected.TryGetComponent(out Unit unit))
+                return unit;
+            if (_currentSelected.TryGetComponent(out Character character))
+                return character.CurrentUnit;
+            
+            return null;
+        }
+
+        public Character GetSelectedCharacter()
+        {
+            if (!_currentSelected)
+                return null;
+            
+            return _currentSelected.TryGetComponent(out Character character) ? character : null;
+        }
+
+        private void SetAsNewSelected(GameObject newSelected)
+        {
+            if (_currentSelected && _currentSelected.TryGetComponent(out IInteractable oldInteractable))
+            {
+                oldInteractable.OnDeselected();
+            }
+
+            if (newSelected)
+            {
+                if (newSelected.TryGetComponent(out IInteractable newInteractable))
+                {
+                    newInteractable.OnSelected();
+                }
+                UIManager.instance.OpenContextMenu(newSelected);
+            }
+            else
+                UIManager.instance.CloseContextMenu();
+            
+            _currentSelected = newSelected;
+        }
+
+
+        public void Select(GameObject newSelected)
+        {
+            
+            GameObject oldSelected = _currentSelected;
+            
+            
+            // Check if selecting a tile
+            if (newSelected.TryGetComponent(out TileScript tile))
+            {
+                // We are selecting a tile
+                
+                // If it is the same tile as before, deselect
+                if (oldSelected == tile.gameObject)
+                {
+                    DeselectAll();
+                    return;
+                }
+                
+                // If this tile is already marked as selected, check if we can move here
+                if (SelectedTiles.Contains(tile))
+                {
+                    Unit selectedUnit = GetSelectedUnit();
+                    
+                    Character selectedCharacter = GetSelectedCharacter();
+                    if (selectedCharacter && selectedCharacter.CurrentUnit.TeamIndex == 0)
+                    {
+                        if (tile != selectedCharacter.GetCurrentTile() || selectedCharacter.State == CharacterState.Moving)
+                        {
+                            selectedCharacter.CurrentUnit.SplitFromUnit(selectedCharacter);
+                            selectedUnit = selectedCharacter.CurrentUnit;
+                        }
+                    }
+                    
+                    if (selectedUnit && selectedUnit.TeamIndex == 0)
+                    {
+                        if (tile != selectedUnit.GetCurrentTile() || selectedUnit.CharactersInUnit[0].State == CharacterState.Moving)
+                        {
+                            selectedUnit.NavigateToTile(tile);
+                            UIManager.instance.CloseContextButtons();
+                            return;
+                        }
+                    }
+                }
+                
+                ClearMarker();
+                SetAsNewSelected(tile.gameObject);
+                SelectTilesInRadius(tile.GetSelectionRadius(), tile);
+            }
+            
+            
+            // Check if selecting a character
+            else if (newSelected.TryGetComponent(out Character character))
+            {
+                // We are selecting a character
+                
+                bool isEnemy = character.CurrentUnit.TeamIndex != 0;
+                
+                // If it is the same character as before, we deselect
+                if (oldSelected == newSelected)
+                {
+                    DeselectAll();
+                }
+                // If the old selected is a unit
+                else if (oldSelected && oldSelected.TryGetComponent(out Unit oldSelectedUnit) && oldSelectedUnit == character.CurrentUnit)
+                {
+                    // Then select the character instead
+                    MarkCharacter(character, isEnemy);
+                    SetAsNewSelected(character.gameObject);
+                        
+                    // Also select the walkable tiles if it is not an enemy
+                    if (!isEnemy)
+                        SelectTilesInRadius(character.CharacterData.WalkRadius, character.CurrentUnit.GetCurrentTile(), true);
+                    else
+                        DeselectTiles();
+                }
+                // If it is not, we select the unit of this character
+                else
+                {
+                    Unit characterUnit = character.CurrentUnit;
+
+                    if (characterUnit.CharactersInUnit.Count > 1)
+                    {
+                        MarkUnit(characterUnit, isEnemy);
+                        SetAsNewSelected(characterUnit.gameObject);
+                    }
+                    else
+                    {
+                        Character unitCharacter = characterUnit.CharactersInUnit[0];
+                        MarkCharacter(unitCharacter, isEnemy);
+                        SetAsNewSelected(unitCharacter.gameObject);
+                    }
+                    
+                    // Also select the walkable tiles if it is not an enemy
+                    if (!isEnemy)
+                        SelectTilesInRadius(characterUnit.Stats.WalkRadius, characterUnit.GetCurrentTile(), true);
+                    else
+                        DeselectTiles();
+                }
+                
+            }
         }
 
         public void SelectTilesInRadius(int radius, TileScript centerTile, bool onlyWalkable = false)
@@ -106,62 +236,39 @@ namespace Managers
             _currentTileSelectionObjects.Clear();
         }
         
-        private void MarkEnemyCharacter(Character enemyCharacter)
+        private void MarkCharacter(Character character, bool isEnemy)
         {
-            ClearEnemyMarker();
-            
-            Vector3 pos = enemyCharacter.CurrentUnit.transform.position + enemyCharacter.transform.localPosition + new Vector3(0,0.01f, 0);;
-            GameObject selectionObject = Instantiate(_enemyCharacterMarkerPrefab, pos, Quaternion.identity);
-            selectionObject.transform.SetParent(enemyCharacter.transform);
-            _currentEnemyMarker = selectionObject;
-        }
-        
-        private void MarkEnemyUnit(Unit enemyUnit)
-        {
-            ClearEnemyMarker();
-            
-            Vector3 pos = enemyUnit.transform.position + new Vector3(0,0.01f, 0);;
-            GameObject selectionObject = Instantiate(_enemyUnitMarkerPrefab, pos, Quaternion.identity);
-            selectionObject.transform.SetParent(enemyUnit.transform);
-            _currentEnemyMarker = selectionObject;
-        }
-
-        private void MarkTeamCharacter(Character character)
-        {
-            ClearTeamMarker();
+            ClearMarker();
             
             Vector3 pos = character.CurrentUnit.transform.position + character.transform.localPosition + new Vector3(0,0.01f, 0);;
-            GameObject selectionObject = Instantiate(_teamCharacterMarkerPrefab, pos, Quaternion.identity);
+            GameObject selectionObject = Instantiate(isEnemy ? _enemyCharacterMarkerPrefab : _teamCharacterMarkerPrefab, pos, Quaternion.identity);
             selectionObject.transform.SetParent(character.transform);
-            _currentTeamMarker = selectionObject;
+            _currentMarker = selectionObject;
         }
         
-        private void MarkTeamUnit(Unit unit)
+        private void MarkUnit(Unit unit, bool isEnemy)
         {
-            ClearTeamMarker();
+            ClearMarker();
+
+            // If there is only one character, we just mark that one instead
+            if (unit.CharactersInUnit.Count == 1)
+            {
+                MarkCharacter(unit.CharactersInUnit[0], isEnemy);
+                return;
+            }
             
-            Vector3 pos = unit.transform.position + new Vector3(0,0.01f, 0);
-            GameObject selectionObject = Instantiate(_teamUnitMarkerPrefab, pos, Quaternion.identity);
+            Vector3 pos = unit.transform.position + new Vector3(0,0.01f, 0);;
+            GameObject selectionObject = Instantiate(isEnemy ? _enemyUnitMarkerPrefab : _teamUnitMarkerPrefab, pos, Quaternion.identity);
             selectionObject.transform.SetParent(unit.transform);
-            _currentTeamMarker = selectionObject;
+            _currentMarker = selectionObject;
         }
 
-        private void ClearTeamMarker()
-        {
-            if (_currentTeamMarker)
-                Destroy(_currentTeamMarker);
-        }
+       
 
-        private void ClearEnemyMarker()
+        private void ClearMarker()
         {
-            if (_currentEnemyMarker)
-                Destroy(_currentEnemyMarker);
-        }
-
-        public Unit GetSelectedUnit()
-        {
-            if (SelectedUnit) return SelectedUnit;
-            return SelectedCharacter ? SelectedCharacter.CurrentUnit : null;
+            if (_currentMarker)
+                Destroy(_currentMarker);
         }
         
         public List<TileScript> GetRadius(int radius, TileScript centerTile)
@@ -201,137 +308,23 @@ namespace Managers
             if (SelectedTiles.Count == 0) return null;
             return SelectedTiles[0];
         }
-
-        public void SelectUnit(Unit unit)
-        {
-            DeselectUnit();
-            TileScript currentTile = unit.GetCurrentTile();
-            
-            if (currentTile)
-            {   
-                SelectTilesInRadius(unit.Stats.WalkRadius, currentTile, true);
-            }
-            
-            SelectedUnit = unit;
-            AnimationManager.Instance.DoBounceAnim(unit.gameObject);
-            MarkTeamUnit(SelectedUnit);
-        }
-    
-        public void SelectCharacter(Character character)
-        {
-            // Deselect if already selected or not valid
-            if (!character || character == SelectedCharacter)
-            {
-                DeselectAll();
-                return;
-            }
-            // If this character is on our team, do this
-            if (character.CurrentUnit.TeamIndex == 0)
-            {
-                SelectTeamCharacter(character);
-            }
-            // This means the character is not on our team, do other
-            else
-            {
-                SelectEnemyCharacter(character);
-            }
-        }
-
-        private void SelectTeamCharacter(Character character)
-        {
-            
-            TileScript currentTile = character.GetCurrenTile();
-            
-            // If we do not have a selected unit, select the unit instead of the character
-            if (!SelectedUnit && SelectedUnit != character.CurrentUnit && character.CurrentUnit.CharactersInUnit.Count > 1)
-            {
-                DeselectCharacter();
-                SelectUnit(character.CurrentUnit);
-            }
-            // If the unit is selected, select the character instead
-            else
-            {
-                DeselectUnit();
-
-                if (currentTile)
-                {
-                    SelectTilesInRadius(character.CharacterData.WalkRadius, currentTile, true);
-                }
-                
-                character.OnSelected();
-                DeselectCharacter();
-                SelectedCharacter = character;
-                TryOpenTeamMenu(character);
-                MarkTeamCharacter(character);
-            }
-        }
-
-        private void SelectEnemyCharacter(Character character)
-        {
-            
-            if (MarkedEnemy && MarkedEnemy == character.gameObject)
-            {
-                DeselectEnemy();
-                return;
-            }
-            
-            // If we do not have a selected unit, select the unit instead of the character
-            if (!MarkedEnemy && MarkedEnemy != character.CurrentUnit.gameObject && character.CurrentUnit.CharactersInUnit.Count > 1)
-            {
-                
-                print("Selecting Unit");
-                MarkedEnemy = character.CurrentUnit.gameObject;
-                TryOpenEnemyMenu(character);
-                MarkEnemyUnit(character.CurrentUnit);
-            }
-            // If the unit is selected, select the character instead
-            else
-            {
-                print("Selecting Character");
-                MarkedEnemy = character.gameObject;
-                TryOpenEnemyMenu(character);
-                MarkEnemyCharacter(character);
-            }
-        }
-        
-        
-        private void TryOpenTeamMenu(Character character)
-        {
-            if (!character) return;
-            TileScript currentTile = character.GetCurrenTile();
-            if (!currentTile) return;
-            
-            if (character.State == CharacterState.Idle)
-            {
-                UIManager.instance.OpenContextMenu(currentTile.TileData.MenuOptions);
-            }
-        }
-        
-        private void TryOpenEnemyMenu(Character character)
-        {
-            if (!character) return;
-
-            Unit selectedUnit = GetSelectedUnit();
-            if (selectedUnit && IsTileSelected(selectedUnit.GetCurrentTile()))
-            {
-                UIManager.instance.OpenContextMenu(character.EnemyMenuOptions);
-            }
-        }
         
         public void UpdateCharacterSelection()
         {
-            if (SelectedCharacter)
+            Character selectedCharacter = GetSelectedCharacter();
+            Unit selectedUnit = GetSelectedUnit();
+            if (selectedCharacter)
             {
-                TileScript currentTile = SelectedCharacter.GetCurrenTile();
+                TileScript currentTile = selectedCharacter.GetCurrentTile();
                 
-                if (currentTile) SelectTilesInRadius(SelectedCharacter.CharacterData.WalkRadius, currentTile, true);
-                TryOpenTeamMenu(SelectedCharacter);
+                if (currentTile) SelectTilesInRadius(selectedCharacter.CharacterData.WalkRadius, currentTile, true);
             }
-            else if (SelectedUnit)
+            
+            else if (selectedUnit)
             {
-                TileScript currentTile = SelectedUnit.GetCurrentTile();
+                TileScript currentTile = selectedUnit.GetCurrentTile();
                 
-                if (currentTile) SelectTilesInRadius(SelectedUnit.Stats.WalkRadius, currentTile, true);
+                if (currentTile) SelectTilesInRadius(selectedUnit.Stats.WalkRadius, currentTile, true);
             }
         }
         public bool IsTileSelected(TileScript tile)

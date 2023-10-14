@@ -18,6 +18,7 @@ namespace UI
         private void Start()
         {
             _icon.sprite = _resourceData.ResourceIcon;
+            SetScore();
             EventManager.Instance.onHeroSpawned += character => TeamManager.Instance.GetTeam(0).onStatsChanged += SetScore;
             
         }
@@ -32,16 +33,17 @@ namespace UI
         private void SetScore()
         {
             int count = 0;
-            if (TeamManager.Instance.GetTeam(0).Resources.TryGetValue(_resourceData.ResourceType, out int amount))
-                count = amount;
-
+            if (TeamManager.Instance.IsValidTeam(0))
+                if (TeamManager.Instance.GetTeam(0).Resources.TryGetValue(_resourceData.ResourceType, out int amount))
+                    count = amount;
+            
             
             string score = count.ToString();
             
             if (score == _scoreText.text) return;
             
             _scoreText.text = score;
-            AnimationManager.Instance.DoBounceAnim(gameObject, 0.25f);
+            AnimationManager.Instance.DoBounceAnim(_icon.gameObject, 0.25f);
 
         }
     }

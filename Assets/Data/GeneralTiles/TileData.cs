@@ -26,6 +26,7 @@ namespace Data.GeneralTiles
     {
 
         [Header("General")]
+        [SerializeField] private Sprite _tileIcon;
         [SerializeField] private string _tileName;
         [SerializeField] private TileType _tileType;
         [SerializeField] private GroundType _groundType;
@@ -44,6 +45,7 @@ namespace Data.GeneralTiles
         [Header("Actions")] 
         [SerializeField] private List<ScriptableAction> _onTilePlaced;
         
+        public Sprite TileIcon => _tileIcon;
         public string TileName => _tileName;
         public TileType TileType => _tileType;
         public GroundType GroundType => _groundType;

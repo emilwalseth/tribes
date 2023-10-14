@@ -15,7 +15,6 @@ namespace Managers
         
 
         [SerializeField] private TileScript _baseTile;
-        [SerializeField] private TownData _townData;
         [Space(10)]
         [Header("Ground Meshes")]
         [SerializeField] private Mesh _unexploredGround;
@@ -23,27 +22,32 @@ namespace Managers
         [SerializeField] private Mesh _townGround;
         [SerializeField] private Mesh _waterGround;
         [SerializeField] private Mesh _stoneGround;
-
+        
         [Space(10)] [Header("Tile Data")] 
         [SerializeField] private TileData _grassTileData;
         [SerializeField] private TileData _waterTileData;
         [SerializeField] private TileData _forestTileData;
         [SerializeField] private TileData _mountainTileData;
-        [SerializeField] private TileData _campsiteTileData;
         
+        [Space(10)] [Header("Towns Data")] 
+        [SerializeField] private TownData _vikingTown;
         
-        public TownData TownData => _townData;
         public TileData GrassTileData => _grassTileData;
         public TileData WaterTileData => _waterTileData;
         public TileData ForestTileData => _forestTileData;
         public TileData MountainTileData => _mountainTileData;
-        public TileData CampsiteTileData => _campsiteTileData;
 
 
         public TileScript CreateTile(Vector3 position)
         {
             TileScript tile = Instantiate(_baseTile, position, Quaternion.identity);
             return tile;
+        }
+
+        public TownData GetTownData()
+        {
+            // TODO: Make relative to your teams town.
+            return _vikingTown;
         }
         
         public void SetTileGround(TileScript tile)
@@ -84,6 +88,7 @@ namespace Managers
             
             TeamManager.Instance.GetTeam(teamIndex).Buildings.Add(tile);
             
+            
             tile.SetTileData(tileData, teamIndex);
         }
         
@@ -94,7 +99,8 @@ namespace Managers
         
         public void CreateTown(TileScript tile, int teamIndex)
         {
-            tile.SetTileData(CampsiteTileData, teamIndex);
+            TileData campsiteTile = GetTownData().TownHall.BuildingData.TileData;
+            tile.SetTileData(campsiteTile, teamIndex);
             MapManager.Instance.AddTownTile(tile);
             TeamManager.Instance.GetTeam(teamIndex).Towns.Add(tile);
         }

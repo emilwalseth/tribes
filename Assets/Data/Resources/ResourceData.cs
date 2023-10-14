@@ -15,6 +15,18 @@ namespace Data.Resources
         public int Amount { get => _amount; set => _amount = value; }
     }
     
+    public struct ResourceAmount
+    {
+        public ResourceData ResourceData { get; set; }
+        public int Amount { get; set; }
+        
+        public ResourceAmount(ResourceData resourceData, int amount)
+        {
+            ResourceData = resourceData;
+            Amount = amount;
+        }
+    }
+    
     
     [Serializable]
     public enum ResourceType

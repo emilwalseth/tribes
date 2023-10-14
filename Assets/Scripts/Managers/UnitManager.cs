@@ -38,6 +38,7 @@ namespace Managers
             Unit spawnedUnit = Instantiate(_unitPrefab, spawnPos, Quaternion.identity);
             spawnedUnit.TeamIndex = teamIndex;
             TeamManager.Instance.GetTeam(teamIndex).Units.Add(spawnedUnit);
+            spawnedUnit.SetLastTile(startTile.transform.position);
             spawnedUnit.SetCurrentTile(startTile.transform.position);
             return spawnedUnit;
             

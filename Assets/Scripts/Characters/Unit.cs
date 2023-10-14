@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using AI;
 using Data.GeneralTiles;
+using Interfaces;
 using Managers;
 using Tiles;
+using UI;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
@@ -20,12 +22,13 @@ namespace Characters
         public float WalkSpeed { get; set; }
     }
     
-    public class Unit : MonoBehaviour
+    public class Unit : MonoBehaviour, IContextInterface, IInteractable
     {
     
         [SerializeField] private CharacterMarker _unitMarker;
 
         private Vector3 _currentTilePosition;
+        private Vector3 _lastTilePosition;
         private UnitStats _unitStats = new UnitStats();
         
         public UnitStats Stats => _unitStats;
@@ -118,7 +121,6 @@ namespace Characters
                 targetTile.onOccupantEntered += OnOccupantUpdated;
             }
             
-            
             ClearOccupant(currentTile);
             return true;
         }
@@ -172,17 +174,24 @@ namespace Characters
             
             NavigateToTile(fallbackTile);
             
-            
+            MakePathRenderer();
+
+        }
+
+        private void MakePathRenderer()
+        {
             NavigationManager.Instance.MakePathRenderer(this);
+            bool isSelected = SelectionManager.Instance.GetSelectedUnit() == this;
+            SetRenderPathVisibility(isSelected);
         }
         
         private bool SetNewNavigationPath(List<NavigationNode> newNavigationPath)
         {
             if (newNavigationPath == null) return false;
 
-            List<Vector3> newPath = new List<Vector3>();
+            List<Vector3> newPath = new();
 
-            List<TileScript> radius = SelectionManager.Instance.GetRadius(Stats.WalkRadius, GetCurrentTile());
+            List<TileScript> radius = SelectionManager.Instance.GetRadius(Stats.WalkRadius + 1, GetCurrentTile());
             
             foreach (NavigationNode node in newNavigationPath)
             {
@@ -200,7 +209,7 @@ namespace Characters
             CurrentNavigationPath = newPath;
             UpdateCharactersMoving(true);
             if (TeamIndex == 0)
-                NavigationManager.Instance.MakePathRenderer(this);
+                MakePathRenderer();
             return true;
         }
         
@@ -210,6 +219,16 @@ namespace Characters
             GetCurrentTile().onOccupantEntered -= OnOccupantUpdated;
             UpdateCharactersMoving(false);
             SetNewOccupant(GetCurrentTile());
+            
+            if (_charactersInUnit.Count == 1 && TeamIndex == TeamManager.Instance.GetMyTeamIndex())
+            {
+                Character character = CharactersInUnit[0];
+                if (SelectionManager.Instance.IsSelected(character.gameObject))
+                {
+                    UIManager.instance.OpenContextMenu(character.gameObject);
+                }
+            }
+            
             onReachedDestination?.Invoke();
         }
 
@@ -247,38 +266,60 @@ namespace Characters
         {
             if (unit == RecentSplitUnit) return;
             
-            bool wasSelected = SelectionManager.Instance.SelectedUnit == unit || SelectionManager.Instance.SelectedUnit == this;
-            if (TeamIndex != 0)
-                wasSelected = false;
+
+
+            Unit mainUnit = unit.CharactersInUnit.Count > CharactersInUnit.Count ? unit : this;
+            Unit oldUnit = mainUnit == unit ? this : unit;
             
-            foreach (Character character in unit.CharactersInUnit)
+            
+            Unit selectedUnit = SelectionManager.Instance.GetSelectedUnit();
+            bool wasSelected = selectedUnit == this || selectedUnit == unit;
+            bool selectOld = false;
+            
+            
+            for (int i = oldUnit.CharactersInUnit.Count - 1; i >= 0; i--)
             {
-                if (CharactersInUnit.Count >= 7)
+                Character character = oldUnit.CharactersInUnit[i];
+                if (mainUnit.CharactersInUnit.Count >= 7)
                 {
-                    List<TileScript> neighbors = MapManager.Instance.GetTileNeighbors(GetCurrentTile().gameObject)
+                    List<TileScript> neighbors = MapManager.Instance.GetTileNeighbors(oldUnit.GetCurrentTile().gameObject)
                         .Where(tile => tile.TileData.IsWalkable).ToList();
-                    Vector3 fallbackTilePos = neighbors[Random.Range(0, neighbors.Count)].transform.position;
-                    unit.transform.position = fallbackTilePos;
-                    unit.SetCurrentTile(fallbackTilePos);
+                    
+                    TileScript fallbackTile = oldUnit.GetLastTile();
+
+                    if (fallbackTile == oldUnit.GetCurrentTile())
+                    {
+                        fallbackTile = neighbors[Random.Range(0, neighbors.Count)];
+                    }
+                    
+                    oldUnit.RecentSplitUnit = mainUnit;
+                    oldUnit.UpdateStats();
+                    oldUnit.RepositionCharacters();
+                    oldUnit.NavigateToTile(fallbackTile);
+                    
+                    if (selectedUnit == oldUnit)
+                        selectOld = true;
+                    
                     break;
                 }
 
-                if (SelectionManager.Instance.SelectedCharacter == character && TeamIndex == 0)
-                    wasSelected = true;
-                
-                character.SetUnit(this);
-                CharactersInUnit.Add(character);
+                oldUnit.CharactersInUnit.Remove(character);
+                character.SetUnit(mainUnit);
+                mainUnit.CharactersInUnit.Add(character);
             }
 
-            if (TeamIndex == 0)
+            if (wasSelected)
+            {
                 SelectionManager.Instance.DeselectAll();
+                
+                Unit selectUnit = selectOld ? oldUnit : mainUnit;
+                SelectionManager.Instance.Select(selectUnit.CharactersInUnit[0].gameObject);
+            }
             
-            if (wasSelected && TeamIndex == 0)
-                SelectionManager.Instance.SelectUnit(this);
-            
-            unit.CharactersInUnit.Clear();
-            unit.DestroyIfEmpty();
-            RepositionCharacters();
+            mainUnit.GetCurrentTile().SetOccupant(mainUnit);
+            mainUnit.UpdateStats();
+            mainUnit.RepositionCharacters();
+            oldUnit.DestroyIfEmpty();
         }
 
         private readonly Vector2[][] _characterConfigurations = new Vector2[][]
@@ -367,13 +408,19 @@ namespace Characters
             UpdateCharactersMoving(_charactersInUnit[0].State == CharacterState.Moving);
             UpdateStats();
         }
+        
+        public void SetLastTile(Vector3 newTilePos)
+        {
+            _lastTilePosition = newTilePos;
+        }
+        
         public void SetCurrentTile(Vector3 newTilePos)
         {
+            SetLastTile(_currentTilePosition);
             _currentTilePosition = newTilePos;
             TileScript tile = GetCurrentTile();
-
-            SetTeamHidden(!tile.IsExplored);
             
+            SetTeamHidden(!tile.IsExplored);
             ExploreTiles();
         }
 
@@ -406,6 +453,11 @@ namespace Characters
         public TileScript GetCurrentTile()
         {
             return MapManager.Instance.GetTileAtPosition(_currentTilePosition);
+        }
+        
+        public TileScript GetLastTile()
+        {
+            return MapManager.Instance.GetTileAtPosition(_lastTilePosition);
         }
         
         public void AddCharacter(Character character)
@@ -518,5 +570,46 @@ namespace Characters
 
             
         }
+
+        public string GetLabel()
+        {
+            return "Viking Army";
+        }
+
+        public Sprite GetIcon()
+        {
+            Sprite sprite = Resources.Load<Sprite>("Textures/UI/Icons/Unit_Icon");
+            return sprite;
+        }
+
+        public List<ContextButtonData> GetContextButtons()
+        {
+            return new List<ContextButtonData>();
+        }
+
+        public void OnClicked()
+        {
+            AnimationManager.Instance.DoBounceAnim(gameObject);
+        }
+
+        public void OnSelected()
+        {
+            SetRenderPathVisibility(true);
+        }
+        
+        public void OnDeselected()
+        {
+            SetRenderPathVisibility(false);
+        }
+        
+        private void SetRenderPathVisibility(bool newVisibility)
+        {
+            if (CurrentPathRenderer)
+            {
+                CurrentPathRenderer.gameObject.transform.localScale = newVisibility ? Vector3.one : Vector3.zero;
+            }
+        }
+
+
     }
 }

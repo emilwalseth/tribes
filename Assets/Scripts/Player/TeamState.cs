@@ -18,16 +18,16 @@ namespace Player
 
         private int _teamIndex = 0;
         private List<TileScript> _buildings = new List<TileScript>();
-        private List<ResourceTileScript> _seenResources = new List<ResourceTileScript>();
-        private List<BuildingTileScript> _seenBuildings = new List<BuildingTileScript>();
+        private List<ResourceTileScript> _seenResourceTiles = new List<ResourceTileScript>();
+        private List<BuildingTileScript> _seenBuildingTiles = new List<BuildingTileScript>();
     
         public int TeamIndex => _teamIndex;
         public List<TileScript> Towns => _towns;
         public List<TileScript> Buildings => _buildings;
         public List<Unit> Units => _units;
         public Dictionary<ResourceType, int> Resources { get; } = new();
-        public List<ResourceTileScript> SeenResources { get => _seenResources; set => _seenResources = value; }
-        public List<BuildingTileScript> SeenBuildings { get => _seenBuildings; set => _seenBuildings = value; }
+        public List<ResourceTileScript> SeenResourceTiles { get => _seenResourceTiles; set => _seenResourceTiles = value; }
+        public List<BuildingTileScript> SeenBuildingTiles { get => _seenBuildingTiles; set => _seenBuildingTiles = value; }
 
 
         public UnityAction onStatsChanged;
@@ -41,28 +41,40 @@ namespace Player
         {
             return Resources.ContainsKey(resourceType) && Resources[resourceType] >= amount;
         }
-
-        public void AddSeenResource(ResourceTileScript resourceTile)
+        
+        public bool HasResources(List<ResourceAmount> resourceType)
         {
-            if (_seenResources.Contains(resourceTile)) return;
-            _seenResources.Add(resourceTile);
+            
+            foreach (ResourceAmount type in resourceType)
+            {
+                if (!HasResource(type.ResourceData.ResourceType, type.Amount))
+                    return false;
+            }
+
+            return true;
+        }
+
+        public void AddSeenResourceTile(ResourceTileScript resourceTile)
+        {
+            if (_seenResourceTiles.Contains(resourceTile)) return;
+            _seenResourceTiles.Add(resourceTile);
         }
         
         public void AddSeenTile(TileScript tile)
         {
             if (tile.CurrentTile.TryGetComponent(out ResourceTileScript resourceTile))
             {
-                if (SeenResources.Contains(resourceTile))return;
-                SeenResources.Add(resourceTile);
+                if (SeenResourceTiles.Contains(resourceTile))return;
+                SeenResourceTiles.Add(resourceTile);
             }
             else if (tile.CurrentTile.TryGetComponent(out BuildingTileScript buildingTile))
             {
-                if (SeenBuildings.Contains(buildingTile))return;
-                SeenBuildings.Add(buildingTile);
+                if (SeenBuildingTiles.Contains(buildingTile))return;
+                SeenBuildingTiles.Add(buildingTile);
             }
         }
         
-        private void AddResource(ResourceType resourceType, int amount)
+        public void AddResource(ResourceType resourceType, int amount)
         {
 
             if (Resources.ContainsKey(resourceType))
@@ -95,6 +107,14 @@ namespace Player
             if (!Resources.ContainsKey(resourceType)) return;
             Resources[resourceType] -= amount;
             onStatsChanged?.Invoke();
+        }
+        
+        public void RemoveResources(List<ResourceAmount> resourceType)
+        {
+            foreach (ResourceAmount type in resourceType)
+            {
+                RemoveResource(type.ResourceData.ResourceType, type.Amount);
+            }
         }
         
         public void AddResources(List<ResourceKeyValuePair> resources)

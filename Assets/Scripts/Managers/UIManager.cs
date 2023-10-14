@@ -1,5 +1,9 @@
 using System.Collections.Generic;
+using Characters;
+using Data.Buildings;
+using Data.Resources;
 using Interfaces;
+using Player;
 using Tiles;
 using UI;
 using UnityEngine;
@@ -12,49 +16,88 @@ namespace Managers
     
         public static UIManager instance;
         private void Awake() => instance = this;
-
-        private RectTransform _openMenu;
         
-        
-        
-        [SerializeField] private BuildMenu _buildMenu;
         [SerializeField] private ContextMenu _contextMenu;
         
         
-        public void OpenBuildMenu(TileScript tile)
+        public void OpenContextMenu(GameObject contextObject)
         {
-            CloseMenu();
+            _contextMenu.Open(contextObject);
+        }
 
-            _openMenu = _buildMenu.gameObject.GetComponent<RectTransform>();
+        public void CloseContextButtons()
+        {
+            _contextMenu.CloseButtons();
+        }
+        public void CloseContextMenu()
+        {
+            _contextMenu.Close();
+        }
+
+        public ContextButtonData MakeHarvestButton(Character character, ResourceData resourceData)
+        {
+
+            List<RequirementData> requirements = new()
+            {
+                new RequirementData(
+                    null,
+                    0,
+                    () => character.State != CharacterState.Harvesting
+                )
+            };
+
+            ContextButtonData harvestButton = new ContextButtonData(
+                resourceData.ResourceIcon,
+                "Harvest",
+                requirements,
+                () =>
+                {
+                    InteractionManager.Instance.StartHarvesting(character);
+                }
+            );
             
-            OpenMenu();
+            return harvestButton;
         }
         
-        public void OpenContextMenu(List<RectTransform> menuOptions)
+        public ContextButtonData MakeBuildButton(TileScript tile, int teamIndex, BuildingTileData buildingData)
         {
-            CloseMenu();
+
+            List<RequirementData> requirements = new();
+            List<ResourceAmount> requirementCost = buildingData.GetResourceCostList();
             
-            _contextMenu.MakeContextMenu(menuOptions);
-            _openMenu = _contextMenu.gameObject.GetComponent<RectTransform>();
+            foreach (ResourceAmount requirement in requirementCost)
+            {
+                requirements.Add(MakeHarvestRequirement(requirement.ResourceData, requirement.Amount));
+            }
+
+            ContextButtonData harvestButton = new (
+                buildingData.BuildingData.TileData.TileIcon,
+                "Build " + buildingData.BuildingData.TileData.TileName,
+                requirements,
+                () =>
+                {
+                    TeamState team = TeamManager.Instance.GetTeam(teamIndex);
+                    
+                    team.RemoveResources(buildingData.GetResourceCostList());
+                    TileManager.Instance.PlaceBuilding(teamIndex, tile, buildingData);
+                    SelectionManager.Instance.DeselectAll();
+                }
+            );
             
-            OpenMenu();
+            return harvestButton;
         }
 
-        private void OpenMenu()
+        public RequirementData MakeHarvestRequirement(ResourceData resourceData, int requiredAmount)
         {
-            if (_openMenu && _openMenu.TryGetComponent(out IMenuInterface menu))
-            {
-                menu.OnOpened();
-            }
-        }
-
-        public void CloseMenu()
-        {
-            if (_openMenu && _openMenu.TryGetComponent(out IMenuInterface menu))
-            {
-                menu.OnClosed();
-            }
-            
+            return new RequirementData(
+                resourceData.ResourceIcon,
+                requiredAmount,
+                () =>
+                {
+                    int teamIndex = TeamManager.Instance.GetMyTeamIndex();
+                    TeamState team = TeamManager.Instance.GetTeam(teamIndex);
+                    return team.HasResource(resourceData.ResourceType, requiredAmount);
+                });
         }
     }
 }

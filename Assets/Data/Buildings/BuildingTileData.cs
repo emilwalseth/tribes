@@ -38,6 +38,17 @@ namespace Data.Buildings
         [SerializeField] private List<BuildingTileData> _upgradeOptions;
         
         public BuildingData BuildingData => _buildingData;
+        public List<BuildingTileData> UpgradeOptions => _upgradeOptions;
+
+        public List<ResourceAmount> GetResourceCostList()
+        {
+            List<ResourceAmount> resourceCosts = new();
+            foreach (ResourceKeyValuePair resource in BuildingData.BuildRequirements.Resources)
+            {
+                resourceCosts.Add(new ResourceAmount(resource.Resource, resource.Amount));
+            }
+            return resourceCosts;
+        }
         
     }
 }
